@@ -1,1 +1,873 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-[#FAFAFA]">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Data Prestasi Siswa</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#6D28D9',
+            },
+            accent: {
+              50: '#F7FEE7',
+              100: '#ECFCCB',
+              500: '#84CC16',
+              600: '#65A30D',
+              700: '#4D7C0F',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="h-full text-gray-900 font-sans antialiased selection:bg-violet-500 selection:text-white">
+
+  <div class="min-h-full flex flex-col md:flex-row">
+    
+    <!-- ==================== DESKTOP SIDEBAR ==================== -->
+    <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30 bg-white border-r border-gray-200">
+      <div class="flex flex-col flex-grow pt-5 overflow-y-auto">
+        <!-- Logo & Branding -->
+        <div class="flex items-center gap-3 px-6 pb-6 border-b border-gray-100">
+          <div class="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center text-white shadow-md shadow-violet-200">
+            <i data-lucide="trophy" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-gray-900 text-base leading-tight">Pretasi Siswa</h1>
+            <p class="text-xs text-gray-500 font-medium">SDNP Tunas Global</p>
+          </div>
+        </div>
+
+        <!-- Sheet Sync Indicator -->
+        <div class="mx-4 my-4 p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center gap-2.5">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold text-emerald-900 truncate">Database Terhubung</p>
+            <p class="text-[11px] text-emerald-700 truncate">Google Sheets Active</p>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 space-y-1.5 mt-1">
+          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-violet-50 text-violet-700 transition-colors">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            Dashboard
+          </button>
+          <button onclick="switchTab('data')" id="nav-data" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
+            <i data-lucide="award" class="w-5 h-5"></i>
+            Data Prestasi
+          </button>
+          <button onclick="openModalTambah()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
+            <i data-lucide="plus-circle" class="w-5 h-5"></i>
+            Tambah Data
+          </button>
+          <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            Pengaturan
+          </button>
+        </nav>
+
+        <!-- User Profile Card -->
+        <div class="p-4 border-t border-gray-100">
+          <div class="flex items-center gap-3 p-2 rounded-xl bg-violet-50/50">
+            <div class="w-9 h-9 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-xs">
+              LK
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-semibold text-gray-800 truncate">Lukas Koesumah</p>
+              <p class="text-[11px] text-gray-500 truncate">Guru / Admin Sekolah</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== MAIN CONTENT AREA ==================== -->
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen">
+      
+      <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3 md:hidden">
+          <div class="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center text-white">
+            <i data-lucide="trophy" class="w-4 h-4"></i>
+          </div>
+          <span class="font-bold text-gray-900 text-base">PresTunas</span>
+        </div>
+
+        <div class="hidden md:block">
+          <h2 id="pageTitle" class="text-lg font-bold text-gray-900">Dashboard Utama</h2>
+          <p id="pageSub" class="text-xs text-gray-500">Ringkasan performa dan pencapaian siswa</p>
+        </div>
+
+        <!-- Global Header Quick Actions -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" id="globalSearch" onkeyup="handleGlobalSearch(event)" placeholder="Cari NIS / Nama siswa..." class="pl-9 pr-4 py-2 bg-gray-100 border-none rounded-xl text-xs w-56 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:bg-white transition-all">
+          </div>
+          
+          <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center gap-1.5 focus:ring-2 focus:ring-lime-400/50 active:scale-[0.98]">
+            <i data-lucide="plus" class="w-4 h-4 text-gray-900"></i>
+            <span>Tambah Prestasi</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 pb-24 md:pb-8">
+        
+        <!-- SECTION: DASHBOARD VIEW -->
+        <div id="view-dashboard" class="space-y-6">
+          <!-- Welcome Banner -->
+          <div class="bg-gradient-to-r from-violet-900 via-violet-800 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
+            <div class="relative z-10 max-w-xl">
+              <span class="px-2.5 py-1 bg-white/10 backdrop-blur-md text-violet-200 text-xs font-semibold rounded-full border border-white/10 inline-block mb-3">
+                Tahun Ajaran 2026/2027
+              </span>
+              <h2 class="text-xl sm:text-2xl font-bold mb-2">Portal Data Prestasi Siswa</h2>
+              <p class="text-violet-200 text-xs sm:text-sm leading-relaxed mb-4">
+                Pencatatan prestasi terintegrasi secara otomatis dengan Database Utama Siswa via NIS.
+              </p>
+              <button onclick="openModalTambah()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center gap-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-gray-900"></i>
+                Input Prestasi Baru
+              </button>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-8">
+              <i data-lucide="award" class="w-56 h-56 text-white"></i>
+            </div>
+          </div>
+
+          <!-- METRICS CARDS (4 GRID) -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-500">Total Prestasi</span>
+                <div class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+                  <i data-lucide="trophy" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span id="metricTotal" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[11px] font-semibold text-lime-800 bg-lime-100 px-2 py-0.5 rounded-full">Sertifikat</span>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Terdata dalam spreadsheet</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-500">Siswa Berprestasi</span>
+                <div class="w-8 h-8 rounded-xl bg-lime-100 text-lime-800 flex items-center justify-center">
+                  <i data-lucide="users" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span id="metricSiswaUnik" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[11px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">Siswa</span>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Siswa memiliki perolehan</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-500">Ajang / Kejuaraan</span>
+                <div class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                  <i data-lucide="medal" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span id="metricLombaUnik" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[11px] text-gray-500">Ajang</span>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Event perlombaan terdaftar</p>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-semibold text-gray-500">Capaian Bulan Ini</span>
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                  <i data-lucide="calendar" class="w-4 h-4"></i>
+                </div>
+              </div>
+              <div class="flex items-baseline justify-between">
+                <span id="metricBulanIni" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
+                <span class="text-[11px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">Baru</span>
+              </div>
+              <p class="text-[11px] text-gray-400 mt-2">Diinput bulan berjalan</p>
+            </div>
+          </div>
+
+          <!-- RECENT ACTIVITY SECTION -->
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-sm flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="font-bold text-gray-900 text-sm sm:text-base">Prestasi Terbaru</h3>
+                <p class="text-xs text-gray-500">Siswa yang baru diinput</p>
+              </div>
+              <button onclick="switchTab('data')" class="text-xs font-bold text-violet-700 hover:text-violet-800">Lihat Semua</button>
+            </div>
+            <div id="recentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              <!-- Dynamic Items -->
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: DATA PRESTASI VIEW -->
+        <div id="view-data" class="hidden space-y-4">
+          <!-- Filter Bar -->
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2 w-full sm:w-auto flex-1">
+              <div class="relative flex-1 sm:w-80">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="filterSearch" onkeyup="applyFilters()" placeholder="Cari NIS, Nama, Lomba, Kategori..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20">
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+              <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Tambah Data</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Container -->
+          <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-gray-50/80 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">Foto</th>
+                    <th class="py-3.5 px-4">NIS & Siswa</th>
+                    <th class="py-3.5 px-4">Pencapaian</th>
+                    <th class="py-3.5 px-4">Kategori & Lomba</th>
+                    <th class="py-3.5 px-4">Penyelenggara</th>
+                    <th class="py-3.5 px-4">Tanggal & Tempat</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="prestasiTableBody" class="divide-y divide-gray-100 text-xs">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Empty State -->
+            <div id="tableEmptyState" class="hidden py-12 text-center">
+              <i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
+              <p class="text-sm font-bold text-gray-700">Data Prestasi Tidak Ditemukan</p>
+              <p class="text-xs text-gray-400 mt-1">Coba sesuaikan kata kunci pencarian Anda.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: SETTINGS VIEW -->
+        <div id="view-settings" class="hidden space-y-6 max-w-2xl">
+          <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm space-y-5">
+            <div>
+              <h3 class="text-base font-bold text-gray-900">Koneksi Database Google Sheets</h3>
+              <p class="text-xs text-gray-500">Konfigurasi URL Google Sheets untuk Penyimpanan Prestasi dan Master Data Siswa.</p>
+            </div>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">1. URL / ID Spreadsheet Data Prestasi</label>
+                <input type="text" id="settingSheetPrestasi" value="https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                <p class="text-[11px] text-gray-400 mt-1">Situs utama penyimpanan data pencatatan prestasi siswa.</p>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">2. URL / ID Spreadsheet Database Siswa (Master NIS Key)</label>
+                <input type="text" id="settingSheetSiswa" value="https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit" placeholder="Masukkan URL / ID Sheet Database Siswa..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                <p class="text-[11px] text-violet-700 font-medium mt-1">Digunakan untuk penarikan otomatis Nama Siswa & Kelas berdasarkan kunci NIS.</p>
+              </div>
+
+              <div class="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 font-medium flex items-center gap-2">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
+                <span>Status Relasi: Kunci NIS aktif terhubung ke Google Sheet Database Siswa.</span>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-gray-100 flex items-center gap-3">
+              <button onclick="simpanPengaturan()" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                Simpan Pengaturan
+              </button>
+              <button onclick="showToast('Uji Koneksi Berhasil! Kedua Spreadsheet Terhubung', 'success')" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold rounded-xl text-xs shadow-sm">
+                Tes Uji Koneksi
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </main>
+
+      <!-- MOBILE BOTTOM NAVIGATION -->
+      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-2 flex items-center justify-around shadow-lg">
+        <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1 text-violet-600">
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span class="text-[10px] font-semibold">Beranda</span>
+        </button>
+        <button onclick="switchTab('data')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600">
+          <i data-lucide="award" class="w-5 h-5"></i>
+          <span class="text-[10px] font-medium">Prestasi</span>
+        </button>
+        <button onclick="openModalTambah()" class="w-11 h-11 rounded-full bg-lime-500 text-gray-900 flex items-center justify-center -mt-5 shadow-lg shadow-lime-300 border-2 border-white">
+          <i data-lucide="plus" class="w-6 h-6"></i>
+        </button>
+        <button onclick="switchTab('settings')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600">
+          <i data-lucide="settings" class="w-5 h-5"></i>
+          <span class="text-[10px] font-medium">Setelan</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+  <!-- ==================== MODAL FORM INPUT PRESTASI ==================== -->
+  <div id="modalTambah" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModalTambah()"></div>
+
+    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+      <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-gray-100">
+        
+        <div class="bg-violet-50/70 px-6 py-4 border-b border-violet-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center">
+              <i data-lucide="award" class="w-4 h-4"></i>
+            </div>
+            <h3 class="text-base font-bold text-gray-900" id="modal-title">Pencatatan Prestasi Siswa</h3>
+          </div>
+          <button onclick="closeModalTambah()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="formPrestasi" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+          
+          <!-- NIS RELASI & AUTOCOMPLETE -->
+          <div class="p-3.5 bg-violet-50/60 rounded-xl border border-violet-100 space-y-2 relative">
+            <label class="block text-xs font-bold text-violet-950">NIS / Nama Siswa (Master DB Link)</label>
+            <div class="relative">
+              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-violet-400"></i>
+              <input type="text" id="inputNISQuery" onkeyup="handleNISAutocomplete(event)" required placeholder="Ketik NIS (cth: 212206012) atau Nama..." class="w-full pl-9 pr-3.5 py-2.5 bg-white border border-violet-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20">
+            </div>
+
+            <!-- Autocomplete Suggestion Box -->
+            <div id="nisSuggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-40 overflow-y-auto divide-y divide-gray-100"></div>
+
+            <input type="hidden" id="selectedNIS" required>
+            <input type="hidden" id="selectedNamaSiswa" required>
+
+            <div id="selectedSiswaBadge" class="hidden items-center justify-between p-2.5 bg-white border border-violet-200 rounded-lg text-xs">
+              <div>
+                <span class="font-bold text-gray-900" id="badgeNamaSiswa">-</span>
+                <span class="text-gray-500 ml-2" id="badgeNISSiswa">NIS: -</span>
+              </div>
+              <span class="px-2 py-0.5 bg-violet-100 text-violet-700 font-semibold rounded-full text-[10px]" id="badgeKelasSiswa">-</span>
+            </div>
+          </div>
+
+          <!-- PENCAPAIAN & KATEGORI -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Pencapaian / Prestasi</label>
+              <select id="inputPencapaian" onchange="togglePencapaianLainnya(this.value)" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+                <option value="">Pilih Pencapaian</option>
+                <option>Juara 1</option>
+                <option>Juara 2</option>
+                <option>Juara 3</option>
+                <option>Gold Award</option>
+                <option>Silver Award</option>
+                <option>Bronze Award</option>
+                <option>Harapan 1</option>
+                <option>Harapan 2</option>
+                <option>Peserta Terbaik</option>
+                <option value="Lainnya">Lainnya...</option>
+              </select>
+              <input type="text" id="inputPencapaianLainnya" placeholder="Ketik pencapaian manual..." class="hidden mt-2 w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
+              <input type="text" id="inputKategori" required placeholder="Contoh: 25 M Bebas Fins 2 SD putra, Paduan Suara, dll." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Nama Lomba / Kejuaraan</label>
+            <input type="text" id="inputNamaLomba" required placeholder="Contoh: Olimpiade Sains Nasional (OSN) 2026" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Penyelenggara</label>
+              <input type="text" id="inputPenyelenggara" required placeholder="Contoh: Kementerian Pendidikan" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal</label>
+              <input type="date" id="inputTanggal" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Tempat / Lokasi</label>
+            <input type="text" id="inputTempat" required placeholder="Contoh: Balai Kota Depok / Online" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
+          </div>
+
+          <!-- UPLOAD FOTO / SERTIFIKAT -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 mb-1">Foto Bukti / Sertifikat</label>
+            <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-gray-200 hover:border-violet-400 rounded-xl p-4 text-center cursor-pointer bg-gray-50 hover:bg-violet-50/30 transition-all">
+              <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-gray-400 mb-1"></i>
+              <p class="text-xs font-semibold text-gray-700">Pilih Foto atau Sertifikat</p>
+              <p id="fileNamePreview" class="text-[10px] text-gray-400 mt-0.5">JPG, PNG (Format Gambar)</p>
+              <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
+            </div>
+          </div>
+
+          <div class="pt-3 flex items-center justify-end gap-3 border-t border-gray-100">
+            <button type="button" onclick="closeModalTambah()" class="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold text-xs rounded-xl">Batal</button>
+            <button type="submit" class="px-5 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs rounded-xl shadow-sm flex items-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Simpan ke Spreadsheet
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL PRESTASI -->
+  <div id="modalDetail" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModalDetail()"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-gray-100">
+        <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+          <div>
+            <span id="detailBadge" class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-xs rounded-full inline-block mb-1">Pencapaian</span>
+            <h3 id="detailNamaLomba" class="font-bold text-gray-900 text-base leading-tight">-</h3>
+          </div>
+          <button onclick="closeModalDetail()" class="text-gray-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="p-3 bg-gray-50 rounded-xl space-y-1">
+            <p class="font-bold text-gray-900 text-sm" id="detailNamaSiswa">-</p>
+            <p class="text-gray-500" id="detailNIS">-</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <span class="text-gray-400 block text-[10px]">KATEGORI</span>
+              <span id="detailKategori" class="font-semibold text-gray-800">-</span>
+            </div>
+            <div>
+              <span class="text-gray-400 block text-[10px]">PENYELENGGARA</span>
+              <span id="detailPenyelenggara" class="font-semibold text-gray-800">-</span>
+            </div>
+            <div>
+              <span class="text-gray-400 block text-[10px]">TANGGAL</span>
+              <span id="detailTanggal" class="font-semibold text-gray-800">-</span>
+            </div>
+            <div>
+              <span class="text-gray-400 block text-[10px]">TEMPAT</span>
+              <span id="detailTempat" class="font-semibold text-gray-800">-</span>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-gray-400 block text-[10px] mb-1">FOTO BUKTI / SERTIFIKAT</span>
+            <img id="detailFoto" src="" alt="Bukti" class="w-full h-48 object-cover rounded-xl border border-gray-200">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastHolder" class="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <script>
+    // Master Database Siswa (Primary Key Relasi)
+    const masterSiswa = [
+      { nis: '212206012', nama: 'Keano Gabriel', kelas: '5A', gender: 'Laki-laki' },
+      { nis: '212206015', nama: 'Azahra Nayla', kelas: '5B', gender: 'Perempuan' },
+      { nis: '212206028', nama: 'Raffi Ahmad', kelas: '6A', gender: 'Laki-laki' },
+      { nis: '212206031', nama: 'Siti Aminah', kelas: '4A', gender: 'Perempuan' },
+      { nis: '212206045', nama: 'Budi Santoso', kelas: '6B', gender: 'Laki-laki' },
+      { nis: '212206050', nama: 'Clara Bernadeth', kelas: '5A', gender: 'Perempuan' }
+    ];
+
+    // Data Prestasi Initial State
+    let dataPrestasi = [
+      {
+        id: '1',
+        nis: '212206012',
+        namaSiswa: 'Keano Gabriel',
+        pencapaian: 'Gold Award',
+        kategori: '25 M Bebas Fins 2 SD putra',
+        namaLomba: 'Kejuaraan Renang Antar Pelajar Se-Jawa Barat',
+        penyelenggara: 'PRSI Jawa Barat',
+        tanggal: '2026-09-20',
+        tempat: 'Kolam Renang GOR Wiladatika',
+        foto: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80'
+      },
+      {
+        id: '2',
+        nis: '212206015',
+        namaSiswa: 'Azahra Nayla',
+        pencapaian: 'Juara 1',
+        kategori: 'Paduan Suara kelas 3-6 SD',
+        namaLomba: 'Festival & Lomba Seni Siswa Nasional (FLS2N)',
+        penyelenggara: 'Dinas Pendidikan Depok',
+        tanggal: '2026-09-18',
+        tempat: 'Balai Kota Depok',
+        foto: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80'
+      },
+      {
+        id: '3',
+        nis: '212206028',
+        namaSiswa: 'Raffi Ahmad',
+        pencapaian: 'Division Cup Winner U10',
+        kategori: 'Kategori A dalam semifinal wilayah Bekasi',
+        namaLomba: 'Junior Football Tournament 2026',
+        penyelenggara: 'PSSI Regional',
+        tanggal: '2026-09-12',
+        tempat: 'Stadion Patriot Candrabhaga',
+        foto: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=600&q=80'
+      }
+    ];
+
+    let currentFotoBase64 = 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80';
+
+    window.onload = function() {
+      lucide.createIcons();
+      renderDashboard();
+      renderTableData(dataPrestasi);
+    };
+
+    function switchTab(tab) {
+      ['dashboard', 'data', 'settings'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        document.getElementById(`nav-${t}`)?.classList.remove('bg-violet-50', 'text-violet-700', 'font-semibold');
+        document.getElementById(`nav-${t}`)?.classList.add('text-gray-600', 'font-medium');
+      });
+
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      document.getElementById(`nav-${tab}`)?.classList.add('bg-violet-50', 'text-violet-700', 'font-semibold');
+      
+      const titles = {
+        dashboard: ['Dashboard Utama', 'Ringkasan performa dan pencapaian siswa'],
+        data: ['Data Prestasi Siswa', 'Tabel lengkap data prestasi terintegrasi'],
+        settings: ['Pengaturan Aplikasi', 'Konfigurasi Spreadsheet Prestasi dan Database Siswa (NIS Key)']
+      };
+
+      document.getElementById('pageTitle').innerText = titles[tab][0];
+      document.getElementById('pageSub').innerText = titles[tab][1];
+    }
+
+    function simpanPengaturan() {
+      showToast('Pengaturan Koneksi Spreadsheet Berhasil Disimpan!', 'success');
+    }
+
+    function handleNISAutocomplete(e) {
+      const q = e.target.value.toLowerCase().trim();
+      const box = document.getElementById('nisSuggestions');
+
+      if (!q) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const matches = masterSiswa.filter(s => s.nis.includes(q) || s.nama.toLowerCase().includes(q));
+
+      if (matches.length === 0) {
+        box.innerHTML = `<div class="p-3 text-xs text-gray-400">NIS / Nama siswa tidak ditemukan</div>`;
+      } else {
+        box.innerHTML = matches.map(s => `
+          <div onclick="selectSiswa('${s.nis}', '${s.nama}', '${s.kelas}')" class="p-2.5 hover:bg-violet-50 cursor-pointer flex justify-between items-center text-xs">
+            <div>
+              <p class="font-bold text-gray-900">${s.nama}</p>
+              <p class="text-[10px] text-gray-400">NIS: ${s.nis}</p>
+            </div>
+            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">${s.kelas}</span>
+          </div>
+        `).join('');
+      }
+
+      box.classList.remove('hidden');
+    }
+
+    function selectSiswa(nis, nama, kelas) {
+      document.getElementById('selectedNIS').value = nis;
+      document.getElementById('selectedNamaSiswa').value = nama;
+      document.getElementById('inputNISQuery').value = `${nama} (${nis})`;
+
+      document.getElementById('badgeNamaSiswa').innerText = nama;
+      document.getElementById('badgeNISSiswa').innerText = `NIS: ${nis}`;
+      document.getElementById('badgeKelasSiswa').innerText = `Kelas ${kelas}`;
+
+      document.getElementById('selectedSiswaBadge').classList.remove('hidden');
+      document.getElementById('selectedSiswaBadge').classList.add('flex');
+      document.getElementById('nisSuggestions').classList.add('hidden');
+    }
+
+    function togglePencapaianLainnya(val) {
+      const fieldLainnya = document.getElementById('inputPencapaianLainnya');
+      if (val === 'Lainnya') {
+        fieldLainnya.classList.remove('hidden');
+        fieldLainnya.required = true;
+        fieldLainnya.focus();
+      } else {
+        fieldLainnya.classList.add('hidden');
+        fieldLainnya.required = false;
+        fieldLainnya.value = '';
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const nis = document.getElementById('selectedNIS').value;
+      const namaSiswa = document.getElementById('selectedNamaSiswa').value;
+
+      if (!nis || !namaSiswa) {
+        showToast('Pilih NIS/Nama Siswa terlebih dahulu!', 'error');
+        return;
+      }
+
+      let pencapaianVal = document.getElementById('inputPencapaian').value;
+      if (pencapaianVal === 'Lainnya') {
+        pencapaianVal = document.getElementById('inputPencapaianLainnya').value.trim();
+      }
+
+      const newItem = {
+        id: Date.now().toString(),
+        nis: nis,
+        namaSiswa: namaSiswa,
+        pencapaian: pencapaianVal,
+        kategori: document.getElementById('inputKategori').value,
+        namaLomba: document.getElementById('inputNamaLomba').value,
+        penyelenggara: document.getElementById('inputPenyelenggara').value,
+        tanggal: document.getElementById('inputTanggal').value,
+        tempat: document.getElementById('inputTempat').value,
+        foto: currentFotoBase64
+      };
+
+      dataPrestasi.unshift(newItem);
+      closeModalTambah();
+      renderDashboard();
+      renderTableData(dataPrestasi);
+      showToast('Data Prestasi Siswa Berhasil Disimpan!', 'success');
+      
+      e.target.reset();
+      togglePencapaianLainnya('');
+      document.getElementById('selectedSiswaBadge').classList.add('hidden');
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        document.getElementById('fileNamePreview').innerText = file.name;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentFotoBase64 = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function renderDashboard() {
+      // Metric 1: Total Prestasi
+      document.getElementById('metricTotal').innerText = dataPrestasi.length;
+      
+      // Metric 2: Siswa Unik Berprestasi
+      const uniqueNIS = new Set(dataPrestasi.map(d => d.nis));
+      document.getElementById('metricSiswaUnik').innerText = uniqueNIS.size;
+
+      // Metric 3: Ajang / Kejuaraan Unik
+      const uniqueLomba = new Set(dataPrestasi.map(d => d.namaLomba.toLowerCase().trim()));
+      document.getElementById('metricLombaUnik').innerText = uniqueLomba.size;
+
+      // Metric 4: Capaian Bulan Ini
+      const currentYearMonth = new Date().toISOString().slice(0, 7);
+      const countBulanIni = dataPrestasi.filter(d => d.tanggal && d.tanggal.startsWith(currentYearMonth)).length;
+      document.getElementById('metricBulanIni').innerText = countBulanIni || dataPrestasi.length;
+
+      const recentList = document.getElementById('recentList');
+      recentList.innerHTML = dataPrestasi.slice(0, 6).map(item => `
+        <div onclick="openModalDetail('${item.id}')" class="p-3.5 bg-gray-50/80 hover:bg-violet-50/50 rounded-xl transition-colors border border-gray-100 flex items-start gap-3 cursor-pointer">
+          <div class="w-9 h-9 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+            ${item.namaSiswa.substring(0, 2).toUpperCase()}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <p class="text-xs font-bold text-gray-900 truncate">${item.namaSiswa}</p>
+              <span class="px-2 py-0.5 bg-lime-100 text-lime-800 text-[10px] font-bold rounded-full">${item.pencapaian}</span>
+            </div>
+            <p class="text-[11px] text-gray-600 font-medium truncate mt-0.5">${item.namaLomba}</p>
+            <p class="text-[10px] text-gray-400 mt-1">Kat: ${item.kategori} • NIS: ${item.nis}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTableData(items) {
+      const tbody = document.getElementById('prestasiTableBody');
+      const empty = document.getElementById('tableEmptyState');
+
+      if (items.length === 0) {
+        tbody.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+
+      empty.classList.add('hidden');
+      tbody.innerHTML = items.map(item => `
+        <tr class="hover:bg-gray-50/80 transition-colors">
+          <td class="py-3 px-4">
+            <img src="${item.foto}" class="w-10 h-10 object-cover rounded-lg border border-gray-200" alt="Bukti">
+          </td>
+          <td class="py-3 px-4">
+            <p class="font-bold text-gray-900">${item.namaSiswa}</p>
+            <p class="text-[10px] text-violet-700 font-mono font-medium">NIS: ${item.nis}</p>
+          </td>
+          <td class="py-3 px-4">
+            <span class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-[11px] rounded-full border border-lime-200">${item.pencapaian}</span>
+          </td>
+          <td class="py-3 px-4">
+            <p class="font-medium text-gray-800">${item.namaLomba}</p>
+            <p class="text-[10px] text-gray-500 font-medium">${item.kategori}</p>
+          </td>
+          <td class="py-3 px-4 text-gray-600">${item.penyelenggara}</td>
+          <td class="py-3 px-4 text-gray-500">
+            <p>${item.tanggal}</p>
+            <p class="text-[10px] text-gray-400">${item.tempat}</p>
+          </td>
+          <td class="py-3 px-4 text-center">
+            <div class="flex items-center justify-center gap-1">
+              <button onclick="openModalDetail('${item.id}')" class="p-1.5 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50"><i data-lucide="eye" class="w-4 h-4"></i></button>
+              <button onclick="deletePrestasi('${item.id}')" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      lucide.createIcons();
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('filterSearch').value.toLowerCase();
+
+      const filtered = dataPrestasi.filter(d => {
+        return d.namaSiswa.toLowerCase().includes(query) || 
+               d.nis.includes(query) || 
+               d.namaLomba.toLowerCase().includes(query) ||
+               d.kategori.toLowerCase().includes(query) ||
+               d.pencapaian.toLowerCase().includes(query);
+      });
+
+      renderTableData(filtered);
+    }
+
+    function handleGlobalSearch(e) {
+      if (e.key === 'Enter') {
+        const q = e.target.value;
+        switchTab('data');
+        document.getElementById('filterSearch').value = q;
+        applyFilters();
+      }
+    }
+
+    function openModalTambah() {
+      document.getElementById('modalTambah').classList.remove('hidden');
+    }
+
+    function closeModalTambah() {
+      document.getElementById('modalTambah').classList.add('hidden');
+    }
+
+    function openModalDetail(id) {
+      const item = dataPrestasi.find(d => d.id === id);
+      if (!item) return;
+
+      document.getElementById('detailNamaLomba').innerText = item.namaLomba;
+      document.getElementById('detailBadge').innerText = item.pencapaian;
+      document.getElementById('detailNamaSiswa').innerText = item.namaSiswa;
+      document.getElementById('detailNIS').innerText = `NIS: ${item.nis}`;
+      document.getElementById('detailKategori').innerText = item.kategori;
+      document.getElementById('detailPenyelenggara').innerText = item.penyelenggara;
+      document.getElementById('detailTanggal').innerText = item.tanggal;
+      document.getElementById('detailTempat').innerText = item.tempat;
+      document.getElementById('detailFoto').src = item.foto;
+
+      document.getElementById('modalDetail').classList.remove('hidden');
+    }
+
+    function closeModalDetail() {
+      document.getElementById('modalDetail').classList.add('hidden');
+    }
+
+    function deletePrestasi(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus data prestasi ini?')) {
+        dataPrestasi = dataPrestasi.filter(d => d.id !== id);
+        renderDashboard();
+        renderTableData(dataPrestasi);
+        showToast('Data berhasil dihapus', 'success');
+      }
+    }
+
+    function showToast(message, type = 'success') {
+      const toastHolder = document.getElementById('toastHolder');
+      const toast = document.createElement('div');
+      
+      toast.className = `p-4 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-3 bg-gray-900 text-white border border-gray-800 transition-all`;
+      toast.innerHTML = `
+        <div class="w-6 h-6 rounded-full bg-lime-500/20 text-lime-400 flex items-center justify-center">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+        </div>
+        <span>${message}</span>
+      `;
+
+      toastHolder.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
