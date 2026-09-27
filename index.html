@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Data Prestasi Siswa</title>
+  <title>Aplikasi Data Prestasi Siswa - PresTunas</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,8 +59,8 @@
         <div class="flex items-center gap-3 px-6 pb-6 border-b border-gray-100">
           <div class="w-10 h-10 bg-violet-600 flex-shrink-0" style="-webkit-mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain; mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain;"></div>
           <div>
-            <h1 class="font-bold text-gray-900 text-base leading-tight">PRESTASI SISWA</h1>
-            <p class="text-xs text-gray-500 font-medium">SDNP Tunas Global</p>
+            <h1 class="font-bold text-gray-900 text-base leading-tight">PresTunas</h1>
+            <p class="text-xs text-gray-500 font-medium">Data Prestasi Siswa</p>
           </div>
         </div>
 
@@ -324,7 +324,7 @@
 
               <div class="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 font-medium flex items-center gap-2">
                 <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                <span>Status Relasi: Google Sheets & Cloudinary Storage Siap Terhubung.</span>
+                <span id="statusSyncSiswaText">Status Relasi: Google Sheets & Cloudinary Storage Siap Terhubung.</span>
               </div>
             </div>
 
@@ -333,8 +333,8 @@
                 <i data-lucide="save" class="w-4 h-4"></i>
                 Simpan Pengaturan
               </button>
-              <button onclick="showToast('Uji Koneksi Berhasil! Google Sheets & Cloudinary Terhubung', 'success')" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold rounded-xl text-xs shadow-sm">
-                Tes Uji Koneksi
+              <button onclick="fetchMasterSiswaFromSheet()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold rounded-xl text-xs shadow-sm">
+                Sync Data Siswa
               </button>
             </div>
           </div>
@@ -530,9 +530,11 @@
   <div id="toastHolder" class="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-2"></div>
 
   <script>
-    // Cloudinary Credentials Storage
+    // Cloudinary & Google Sheets Credentials Storage
     let cloudinaryCloudName = localStorage.getItem('cld_cloud_name') || '';
     let cloudinaryUploadPreset = localStorage.getItem('cld_upload_preset') || '';
+    let sheetSiswaUrl = localStorage.getItem('sheet_siswa_url') || 'https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit';
+    let sheetPrestasiUrl = localStorage.getItem('sheet_prestasi_url') || 'https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit';
 
     // Helper function for Cloudinary Image Transformation
     function getOptimizedPhotoUrl(originalUrl, params = 'w_120,h_120,c_fill,g_face,q_auto,f_auto') {
@@ -542,8 +544,8 @@
       return originalUrl.replace('/upload/', `/upload/${params}/`);
     }
 
-    // Master Database Siswa (Primary Key Relasi)
-    const masterSiswa = [
+    // Master Database Siswa (Default Fallback Data)
+    let masterSiswa = [
       { nis: '212206012', nama: 'Keano Gabriel', kelas: '5A', gender: 'Laki-laki' },
       { nis: '212206015', nama: 'Azahra Nayla', kelas: '5B', gender: 'Perempuan' },
       { nis: '212206028', nama: 'Raffi Ahmad', kelas: '6A', gender: 'Laki-laki' },
@@ -551,6 +553,67 @@
       { nis: '212206045', nama: 'Budi Santoso', kelas: '6B', gender: 'Laki-laki' },
       { nis: '212206050', nama: 'Clara Bernadeth', kelas: '5A', gender: 'Perempuan' }
     ];
+
+    // Auto Fetch Live Student Data from Google Sheets
+    async function fetchMasterSiswaFromSheet() {
+      const urlInput = document.getElementById('settingSheetSiswa');
+      const url = (urlInput ? urlInput.value.trim() : '') || sheetSiswaUrl;
+      if (!url) return;
+
+      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      const sheetId = match ? match[1] : url;
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
+
+      try {
+        const response = await fetch(gvizUrl);
+        if (!response.ok) throw new Error('Gagal mengakses Google Sheets');
+        const text = await response.text();
+        
+        const jsonStart = text.indexOf('{');
+        const jsonEnd = text.lastIndexOf('}') + 1;
+        if (jsonStart === -1 || jsonEnd === -1) throw new Error('Respon sheet tidak valid');
+
+        const data = JSON.parse(text.substring(jsonStart, jsonEnd));
+        if (!data.table || !data.table.rows) return;
+
+        let nisIdx = 0, namaIdx = 1, kelasIdx = 2;
+        if (data.table.cols) {
+          data.table.cols.forEach((col, idx) => {
+            const label = (col.label || '').toLowerCase();
+            if (label.includes('nis')) nisIdx = idx;
+            else if (label.includes('nama')) namaIdx = idx;
+            else if (label.includes('kelas')) kelasIdx = idx;
+          });
+        }
+
+        const loadedSiswa = [];
+        data.table.rows.forEach(row => {
+          if (!row.c) return;
+          const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
+          const namaVal = row.c[namaIdx]?.v != null ? String(row.c[namaIdx].v).trim() : '';
+          const kelasVal = row.c[kelasIdx]?.v != null ? String(row.c[kelasIdx].v).trim() : '';
+
+          if (nisVal && namaVal && nisVal.toLowerCase() !== 'nis' && namaVal.toLowerCase() !== 'nama siswa') {
+            loadedSiswa.push({
+              nis: nisVal,
+              nama: namaVal,
+              kelas: kelasVal || '-'
+            });
+          }
+        });
+
+        if (loadedSiswa.length > 0) {
+          masterSiswa = loadedSiswa;
+          const statusElem = document.getElementById('statusSyncSiswaText');
+          if (statusElem) {
+            statusElem.innerText = `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat secara otomatis dari Google Sheets Database Siswa!`;
+          }
+          showToast(`Berhasil memuat ${masterSiswa.length} data siswa dari Google Sheets!`, 'success');
+        }
+      } catch (err) {
+        console.warn('Sync live data siswa Google Sheets:', err);
+      }
+    }
 
     // Initial Data Prestasi
     let dataPrestasi = [
@@ -597,11 +660,19 @@
     window.onload = function() {
       lucide.createIcons();
       
-      // Load saved Cloudinary credentials into settings form if elements exist
+      // Load saved Cloudinary & Google Sheets credentials into settings form if elements exist
       const cloudNameInput = document.getElementById('settingCloudinaryName');
       const presetInput = document.getElementById('settingCloudinaryPreset');
+      const sheetSiswaInput = document.getElementById('settingSheetSiswa');
+      const sheetPrestasiInput = document.getElementById('settingSheetPrestasi');
+
       if (cloudNameInput) cloudNameInput.value = cloudinaryCloudName;
       if (presetInput) presetInput.value = cloudinaryUploadPreset;
+      if (sheetSiswaInput) sheetSiswaInput.value = sheetSiswaUrl;
+      if (sheetPrestasiInput) sheetPrestasiInput.value = sheetPrestasiUrl;
+
+      // Auto Fetch Student Master Sheet
+      fetchMasterSiswaFromSheet();
 
       renderDashboard();
       renderTableData(dataPrestasi);
@@ -645,13 +716,20 @@
     function simpanPengaturan() {
       const cloudNameInput = document.getElementById('settingCloudinaryName');
       const presetInput = document.getElementById('settingCloudinaryPreset');
+      const sheetSiswaInput = document.getElementById('settingSheetSiswa');
+      const sheetPrestasiInput = document.getElementById('settingSheetPrestasi');
 
       if (cloudNameInput) cloudinaryCloudName = cloudNameInput.value.trim();
       if (presetInput) cloudinaryUploadPreset = presetInput.value.trim();
+      if (sheetSiswaInput) sheetSiswaUrl = sheetSiswaInput.value.trim();
+      if (sheetPrestasiInput) sheetPrestasiUrl = sheetPrestasiInput.value.trim();
 
       localStorage.setItem('cld_cloud_name', cloudinaryCloudName);
       localStorage.setItem('cld_upload_preset', cloudinaryUploadPreset);
+      localStorage.setItem('sheet_siswa_url', sheetSiswaUrl);
+      localStorage.setItem('sheet_prestasi_url', sheetPrestasiUrl);
 
+      fetchMasterSiswaFromSheet();
       showToast('Pengaturan Google Sheets & Cloudinary Berhasil Disimpan!', 'success');
     }
 
