@@ -187,7 +187,7 @@
         <div><label class="block text-xs font-semibold mb-1">Tempat / Lokasi</label><input id="inputTempat" required class="fld"></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 bg-violet-50/60 rounded-xl border border-violet-100">
           <div><label class="block text-xs font-semibold mb-1">Tahun Pelajaran (dari Riwayat Kelas)</label><select id="inputTahun" onchange="updateKelas()" required class="fld"></select></div>
-          <div><label class="block text-xs font-semibold mb-1">Kelas pada tahun tsb (otomatis)</label><input id="inputKelas" readonly class="fld !bg-gray-100"></div>
+          <div><label class="block text-xs font-semibold mb-1">Kelas pada tahun tsb (otomatis, bisa diubah)</label><input id="inputKelas" class="fld"></div>
         </div>
         <div>
           <label class="block text-xs font-semibold mb-1">Foto Bukti / Sertifikat (opsional, via Cloudinary)</label>
@@ -347,7 +347,7 @@ async function fetchSiswa() {
 }
 
 // ---------- TAHUN PELAJARAN ----------
-const normTahun = s => String(s || '').replace(/\s/g, '').replace(/-/g, '/');
+const normTahun = s => (String(s || '').match(/\d{4}/) || [String(s || '').replace(/\s/g, '')])[0];
 function tahunDariTanggal(t) {   // tahun pelajaran Juli - Juni
   const m = /^(\d{4})-(\d{2})/.exec(t || ''); if (!m) return '';
   const y = +m[1], mo = +m[2];
@@ -372,7 +372,9 @@ function isiOpsiTahun(preferred) {
 }
 function updateKelas() {
   const s = masterSiswa.find(x => x.nis === $('selectedNIS').value);
-  $('inputKelas').value = kelasPada(s, $('inputTahun').value) || '-';
+  const k = kelasPada(s, $('inputTahun').value);
+  $('inputKelas').value = k;
+  $('inputKelas').placeholder = !s ? 'Pilih siswa dulu' : !(s.riwayat || []).length ? 'Siswa ini tidak ada di Riwayat Kelas, isi manual' : k ? '' : 'Tahun ini belum ada di Riwayat Kelas, isi manual';
 }
 
 // ---------- AUTOCOMPLETE ----------
@@ -595,6 +597,7 @@ function openEdit(id) {
   $('inputPenyelenggara').value = it.penyelenggara; $('inputTanggal').value = it.tanggal;
   $('inputTempat').value = it.tempat;
   isiOpsiTahun(it.tahunPelajaran || '');
+  if (it.kelas) $('inputKelas').value = it.kelas;
   $('fotoNote').textContent = it.foto ? 'Foto saat ini dipertahankan. Pilih file baru untuk menggantinya.' : '';
   $('modalTambah').classList.remove('hidden');
 }
