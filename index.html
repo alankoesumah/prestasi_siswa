@@ -307,6 +307,12 @@
                 <p class="text-[11px] text-violet-700 font-medium mt-1">Digunakan untuk penarikan otomatis Nama Siswa & Kelas berdasarkan kunci Kolom A (NIS/NIPD).</p>
               </div>
 
+              <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">2b. Nama Tab "Riwayat Kelas" (di spreadsheet yang sama)</label>
+                <input type="text" id="settingTabRiwayatKelas" value="Riwayat Kelas" placeholder="Contoh: Riwayat Kelas" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                <p class="text-[11px] text-gray-400 mt-1">Kolom yang dibaca: Tahun Pelajaran, NIS, Kelas. Kelas terbaru per NIS akan digabung ke data siswa.</p>
+              </div>
+
               <!-- CLOUDINARY CONFIGURATION FIELDS -->
               <div class="pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -578,6 +584,7 @@
     ];
 
     let sheetSiswaUrl = "https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit";
+    let tabRiwayatKelas = "Riwayat Kelas";
     let currentFotoBase64 = 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80';
 
     window.onload = function() {
@@ -642,6 +649,10 @@
       if (sheetSiswaInput && sheetSiswaInput.value.trim()) {
         sheetSiswaUrl = sheetSiswaInput.value.trim();
       }
+      const tabRiwayatInput = document.getElementById('settingTabRiwayatKelas');
+      if (tabRiwayatInput && tabRiwayatInput.value.trim()) {
+        tabRiwayatKelas = tabRiwayatInput.value.trim();
+      }
       fetchMasterSiswaFromSheet();
       showToast('Pengaturan Koneksi Spreadsheet Berhasil Disimpan!', 'success');
     }
@@ -662,13 +673,96 @@
       if (!isNISN && (label.includes('nipd') || label.includes('nis'))) {
         return 'nis';
       }
-      if (label.includes('nama')) {
+
+      // "Nama" bisa muncul di banyak kolom lain di sheet database siswa yang
+      // lengkap: Nama Ayah, Nama Ibu, Nama Wali, Nama Panggilan, dst. Kolom
+      // ini HARUS dikecualikan, kalau tidak kolom terakhir yang match akan
+      // menimpa kolom "Nama Lengkap" yang sebenarnya jadi kunci.
+      const isNamaLain = label.includes('ayah') || label.includes('ibu') ||
+                          label.includes('wali') || label.includes('orang tua') ||
+                          label.includes('ortu') || label.includes('panggilan');
+      if (!isNamaLain && label.includes('nama')) {
         return 'nama';
       }
-      if (label.includes('kelas')) {
+
+      if (label.includes('kelas') || label.includes('rombel')) {
         return 'kelas';
       }
+      if (label.includes('tahun')) {
+        return 'tahun';
+      }
       return null;
+    }
+
+    // Ambil satu tab/sheet dari spreadsheet via gviz. sheetName kosong berarti
+    // ambil tab pertama (default). Dipakai bersama oleh data siswa utama dan
+    // tab "Riwayat Kelas".
+    async function fetchGvizTable(sheetId, sheetName) {
+      const sheetParam = sheetName ? `&sheet=${encodeURIComponent(sheetName)}` : '';
+      const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json${sheetParam}`;
+
+      const response = await fetch(gvizUrl);
+      if (!response.ok) throw new Error(`Gagal mengakses sheet${sheetName ? ' "' + sheetName + '"' : ''}`);
+      const text = await response.text();
+
+      const jsonStart = text.indexOf('{');
+      const jsonEnd = text.lastIndexOf('}') + 1;
+      if (jsonStart === -1 || jsonEnd === -1) throw new Error('Respon sheet tidak valid');
+
+      const data = JSON.parse(text.substring(jsonStart, jsonEnd));
+      if (!data.table) throw new Error('Tabel tidak ditemukan di respon sheet');
+      return data.table;
+    }
+
+    // Baca tab "Riwayat Kelas" (Tahun Pelajaran, NIS, Kelas) dan kembalikan
+    // Map NIS -> Kelas TERBARU (berdasarkan Tahun Pelajaran paling besar/akhir).
+    // Kalau tab ini tidak ada / gagal diakses, kembalikan Map kosong dan cuma
+    // log warning -- tidak menggagalkan load data siswa utama.
+    async function fetchRiwayatKelasMap(sheetId, tabName) {
+      const kelasMap = new Map();
+      try {
+        const table = await fetchGvizTable(sheetId, tabName);
+        if (!table.rows) return kelasMap;
+
+        let nisIdx = null, kelasIdx = null, tahunIdx = null;
+        if (table.cols) {
+          table.cols.forEach((col, idx) => {
+            const kind = classifyKolomSiswa(col.label);
+            if (kind === 'nis') nisIdx = idx;
+            else if (kind === 'kelas') kelasIdx = idx;
+            else if (kind === 'tahun') tahunIdx = idx;
+          });
+        }
+
+        if (nisIdx === null || kelasIdx === null) {
+          console.warn(`Tab "${tabName}": kolom NIS dan/atau Kelas tidak terdeteksi dari header, riwayat kelas dilewati.`);
+          return kelasMap;
+        }
+
+        table.rows.forEach(row => {
+          if (!row.c) return;
+          const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
+          const kelasVal = row.c[kelasIdx]?.v != null ? String(row.c[kelasIdx].v).trim() : '';
+          const tahunVal = (tahunIdx != null && row.c[tahunIdx]?.v != null) ? String(row.c[tahunIdx].v).trim() : '';
+
+          if (!nisVal || !kelasVal) return;
+
+          const existing = kelasMap.get(nisVal);
+          if (!existing) {
+            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
+          } else if (tahunVal && (!existing.tahun || tahunVal >= existing.tahun)) {
+            // Tahun Pelajaran baru diketahui dan >= yang tersimpan -> lebih baru
+            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
+          } else if (!tahunVal && !existing.tahun) {
+            // Tidak ada info tahun sama sekali di kedua baris -> asumsikan
+            // baris yang muncul belakangan di sheet adalah yang terbaru
+            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
+          }
+        });
+      } catch (err) {
+        console.warn(`Gagal memuat tab "${tabName}" (Riwayat Kelas):`, err);
+      }
+      return kelasMap;
     }
 
     async function fetchMasterSiswaFromSheet() {
@@ -676,28 +770,26 @@
       const url = (urlInput ? urlInput.value.trim() : '') || sheetSiswaUrl;
       if (!url) return;
 
+      const tabRiwayatInput = document.getElementById('settingTabRiwayatKelas');
+      const tabRiwayat = (tabRiwayatInput ? tabRiwayatInput.value.trim() : '') || tabRiwayatKelas;
+
       const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
       const sheetId = match ? match[1] : url;
-      const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json`;
 
       try {
-        const response = await fetch(gvizUrl);
-        if (!response.ok) throw new Error('Gagal mengakses Google Sheets');
-        const text = await response.text();
-        
-        const jsonStart = text.indexOf('{');
-        const jsonEnd = text.lastIndexOf('}') + 1;
-        if (jsonStart === -1 || jsonEnd === -1) throw new Error('Respon sheet tidak valid');
+        const table = await fetchGvizTable(sheetId);
+        if (!table.rows) return;
 
-        const data = JSON.parse(text.substring(jsonStart, jsonEnd));
-        if (!data.table || !data.table.rows) return;
-
-        // Default Kolom A = NIS/NIPD (idx 0), B = Nama (idx 1), C = Kelas (idx 2)
-        let nisIdx = 0, namaIdx = 1, kelasIdx = 2;
+        // Tidak lagi menebak index default (0/1/2) untuk masing-masing kolom.
+        // Kalau sebuah kolom (misalnya "Kelas") memang tidak ada di header,
+        // lebih aman dibiarkan tidak ditemukan daripada diam-diam menunjuk
+        // ke kolom lain yang salah (bug sebelumnya: default kelasIdx=2 malah
+        // jatuh ke kolom "Panggilan" ketika sheet tidak punya kolom Kelas).
+        let nisIdx = null, namaIdx = null, kelasIdx = null;
         let foundFromCols = false;
 
-        if (data.table.cols) {
-          data.table.cols.forEach((col, idx) => {
+        if (table.cols) {
+          table.cols.forEach((col, idx) => {
             const kind = classifyKolomSiswa(col.label);
             if (kind === 'nis') { nisIdx = idx; foundFromCols = true; }
             else if (kind === 'nama') { namaIdx = idx; foundFromCols = true; }
@@ -709,8 +801,8 @@
         // (misalnya header sheet tidak terbaca sebagai label kolom oleh gviz).
         // Sebelumnya blok ini jalan tanpa syarat dan bisa menimpa hasil yang
         // sudah benar dari cols -- itu salah satu sumber bug tertukarnya key.
-        if (!foundFromCols && data.table.rows.length > 0 && data.table.rows[0].c) {
-          data.table.rows[0].c.forEach((cell, idx) => {
+        if (!foundFromCols && table.rows.length > 0 && table.rows[0].c) {
+          table.rows[0].c.forEach((cell, idx) => {
             const val = cell && cell.v != null ? String(cell.v) : '';
             const kind = classifyKolomSiswa(val);
             if (kind === 'nis') nisIdx = idx;
@@ -719,10 +811,23 @@
           });
         }
 
+        // Kalau NIS/NIPD atau Nama tetap tidak ketemu sama sekali, jatuh balik
+        // ke asumsi paling umum (A=NIS/NIPD, B=Nama) supaya app tetap bisa
+        // jalan alih-alih diam-diam gagal total. Kelas TIDAK diberi fallback
+        // index karena kalau memang kolomnya tidak ada, menebak index lain
+        // hanya akan menampilkan data yang salah (seperti kasus "Panggilan").
+        if (nisIdx === null) nisIdx = 0;
+        if (namaIdx === null) namaIdx = 1;
+
+        // Kelas siswa dicatat per Tahun Pelajaran di tab terpisah ("Riwayat
+        // Kelas"), bukan kolom tetap di Database Siswa. Ambil sekarang,
+        // paralel dengan proses parsing data siswa di atas.
+        const kelasFromRiwayat = await fetchRiwayatKelasMap(sheetId, tabRiwayat);
+
         const loadedSiswa = [];
         const skippedRows = []; // diagnostik: catat baris yang terlewat + alasannya
 
-        data.table.rows.forEach((row, rowIdx) => {
+        table.rows.forEach((row, rowIdx) => {
           // Baris ke-berapa di spreadsheet (row 1 = header, jadi data dimulai dari row 2)
           const sheetRowNumber = rowIdx + 2;
 
@@ -733,7 +838,7 @@
 
           const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
           const namaVal = row.c[namaIdx]?.v != null ? String(row.c[namaIdx].v).trim() : '';
-          const kelasVal = row.c[kelasIdx]?.v != null ? String(row.c[kelasIdx].v).trim() : '';
+          const kelasLangsungVal = (kelasIdx != null && row.c[kelasIdx]?.v != null) ? String(row.c[kelasIdx].v).trim() : '';
 
           const nisLower = nisVal.toLowerCase();
           const namaLower = namaVal.toLowerCase();
@@ -752,10 +857,15 @@
             return;
           }
 
+          // Prioritas Kelas: dari tab Riwayat Kelas (Tahun Pelajaran terbaru)
+          // dulu; kalau tidak ada, pakai kolom Kelas langsung di sheet ini
+          // (kalau memang ada); kalau dua-duanya tidak ada, tampilkan '-'.
+          const kelasVal = kelasFromRiwayat.get(nisVal)?.kelas || kelasLangsungVal || '-';
+
           loadedSiswa.push({
             nis: nisVal,
             nama: namaVal,
-            kelas: kelasVal || '-'
+            kelas: kelasVal
           });
         });
 
@@ -767,16 +877,17 @@
         if (loadedSiswa.length > 0) {
           masterSiswa = loadedSiswa;
           const statusElem = document.getElementById('statusSyncSiswaText');
-          const totalRowsInSheet = data.table.rows.length;
+          const totalRowsInSheet = table.rows.length;
+          const kelasCount = loadedSiswa.filter(s => s.kelas !== '-').length;
           if (statusElem) {
             statusElem.innerText = skippedRows.length > 0
-              ? `Status Relasi: ${masterSiswa.length} dari ${totalRowsInSheet} baris berhasil dimuat (${skippedRows.length} baris terlewat, lihat Console untuk detail).`
-              : `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat (Primary Key: Kolom A - NIS/NIPD)!`;
+              ? `Status Relasi: ${masterSiswa.length} dari ${totalRowsInSheet} baris berhasil dimuat (${skippedRows.length} baris terlewat, ${kelasCount} punya data Kelas dari "${tabRiwayat}"). Cek Console untuk detail.`
+              : `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat, ${kelasCount} dengan Kelas dari "${tabRiwayat}" (Primary Key: Kolom A - NIS/NIPD)!`;
           }
           if (skippedRows.length > 0) {
             showToast(`Dimuat ${masterSiswa.length}/${totalRowsInSheet} siswa. ${skippedRows.length} baris terlewat — cek Console (F12).`, 'warning');
           } else {
-            showToast(`Berhasil memuat ${masterSiswa.length} data siswa (Kunci NIS/NIPD)!`, 'success');
+            showToast(`Berhasil memuat ${masterSiswa.length} data siswa (${kelasCount} dengan Kelas)!`, 'success');
           }
         }
       } catch (err) {
