@@ -229,7 +229,7 @@ const DEFAULTS = {
   scriptUrl: '', token: '',
   sheetPrestasi: 'https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit',
   sheetSiswa: 'https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit',
-  tabRiwayat: 'Riwayat Kelas',
+  tabRiwayat: 'Riwayat_Kelas',
   kolNisU: 'NIS/NIPD', kolNamaU: 'Nama Lengkap',
   kolTahunR: 'Tahun Pelajaran', kolNisR: 'NIS', kolKelasR: 'Kelas',
   cloudName: '', cloudPreset: ''
@@ -237,6 +237,7 @@ const DEFAULTS = {
 const FIELD_IDS = { scriptUrl:'sScriptUrl', token:'sToken', sheetPrestasi:'sSheetPrestasi', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
 let S = { ...DEFAULTS };
 try { S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('prestunas_settings') || '{}') }; } catch (e) {}
+if (S.tabRiwayat === 'Riwayat Kelas') S.tabRiwayat = 'Riwayat_Kelas';
 
 function fillSettingsForm() { Object.entries(FIELD_IDS).forEach(([k, id]) => $(id).value = S[k] || ''); }
 function saveSettings() {
@@ -301,7 +302,11 @@ async function gviz(id, tab) {
 async function fetchKelasMap(id) {
   const map = new Map();   // NIS -> [{tahun, kelas}] (terbaru di urutan pertama)
   try {
-    const t = await gviz(id, S.tabRiwayat);
+    let t = null;
+    for (const nm of [S.tabRiwayat, S.tabRiwayat.replace(/ /g, '_'), S.tabRiwayat.replace(/_/g, ' ')]) {
+      try { const c = await gviz(id, nm); if (idxPersis(c.cols, S.kolNisR) !== null && idxPersis(c.cols, S.kolKelasR) !== null) { t = c; break; } } catch (e) {}
+    }
+    if (!t) throw new Error('Tab "' + S.tabRiwayat + '" tidak ditemukan / kolom NIS & Kelas tidak cocok');
     const ni = idxPersis(t.cols, S.kolNisR), ki = idxPersis(t.cols, S.kolKelasR), ti = idxPersis(t.cols, S.kolTahunR);
     if (ni === null || ki === null) return map;
     (t.rows || []).forEach(r => {
