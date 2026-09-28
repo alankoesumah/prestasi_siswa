@@ -313,6 +313,33 @@
                 <p class="text-[11px] text-gray-400 mt-1">Kolom yang dibaca: Tahun Pelajaran, NIS, Kelas. Kelas terbaru per NIS akan digabung ke data siswa.</p>
               </div>
 
+              <div class="pt-3 border-t border-gray-100">
+                <p class="text-xs font-bold text-gray-700 mb-2">2c. Nama Kolom Persis (Exact Match)</p>
+                <p class="text-[11px] text-gray-400 mb-3">Tulis judul kolom PERSIS seperti di baris header sheet Anda (tidak case-sensitive). Tidak ada lagi tebak-tebakan berdasarkan kata kunci.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom NIS/NIPD (tab Database Siswa)</label>
+                    <input type="text" id="settingKolomNisUtama" value="NIS/NIPD" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Nama (tab Database Siswa)</label>
+                    <input type="text" id="settingKolomNamaUtama" value="Nama Lengkap" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Tahun Pelajaran (tab Riwayat Kelas)</label>
+                    <input type="text" id="settingKolomTahunRiwayat" value="Tahun Pelajaran" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom NIS (tab Riwayat Kelas)</label>
+                    <input type="text" id="settingKolomNisRiwayat" value="NIS" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Kelas (tab Riwayat Kelas)</label>
+                    <input type="text" id="settingKolomKelasRiwayat" value="Kelas" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
+                  </div>
+                </div>
+              </div>
+
               <!-- CLOUDINARY CONFIGURATION FIELDS -->
               <div class="pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -585,6 +612,17 @@
 
     let sheetSiswaUrl = "https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit";
     let tabRiwayatKelas = "Riwayat Kelas";
+
+    // Nama kolom di-COCOKKAN PERSIS (exact match, tidak peduli besar-kecil huruf
+    // & spasi di ujung) sesuai judul asli di sheet -- bukan ditebak dari kata
+    // kunci lagi. Ini defaultnya sesuai header yang sudah dikonfirmasi; bisa
+    // diubah lewat form di tab Pengaturan kalau sheet Anda berubah.
+    let kolomNisUtama = 'NIS/NIPD';       // tab Database Siswa
+    let kolomNamaUtama = 'Nama Lengkap';  // tab Database Siswa
+    let kolomTahunRiwayat = 'Tahun Pelajaran'; // tab Riwayat Kelas
+    let kolomNisRiwayat = 'NIS';               // tab Riwayat Kelas
+    let kolomKelasRiwayat = 'Kelas';           // tab Riwayat Kelas
+
     let currentFotoBase64 = 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80';
 
     window.onload = function() {
@@ -653,45 +691,46 @@
       if (tabRiwayatInput && tabRiwayatInput.value.trim()) {
         tabRiwayatKelas = tabRiwayatInput.value.trim();
       }
+
+      const kolomNisUtamaInput = document.getElementById('settingKolomNisUtama');
+      if (kolomNisUtamaInput && kolomNisUtamaInput.value.trim()) {
+        kolomNisUtama = kolomNisUtamaInput.value.trim();
+      }
+      const kolomNamaUtamaInput = document.getElementById('settingKolomNamaUtama');
+      if (kolomNamaUtamaInput && kolomNamaUtamaInput.value.trim()) {
+        kolomNamaUtama = kolomNamaUtamaInput.value.trim();
+      }
+      const kolomTahunRiwayatInput = document.getElementById('settingKolomTahunRiwayat');
+      if (kolomTahunRiwayatInput && kolomTahunRiwayatInput.value.trim()) {
+        kolomTahunRiwayat = kolomTahunRiwayatInput.value.trim();
+      }
+      const kolomNisRiwayatInput = document.getElementById('settingKolomNisRiwayat');
+      if (kolomNisRiwayatInput && kolomNisRiwayatInput.value.trim()) {
+        kolomNisRiwayat = kolomNisRiwayatInput.value.trim();
+      }
+      const kolomKelasRiwayatInput = document.getElementById('settingKolomKelasRiwayat');
+      if (kolomKelasRiwayatInput && kolomKelasRiwayatInput.value.trim()) {
+        kolomKelasRiwayat = kolomKelasRiwayatInput.value.trim();
+      }
+
       fetchMasterSiswaFromSheet();
       showToast('Pengaturan Koneksi Spreadsheet Berhasil Disimpan!', 'success');
     }
 
     // ---------------------------------------------------------------
-    // Helper: klasifikasi label kolom secara presisi.
-    // "NISN" (Nomor Induk Siswa Nasional) mengandung substring "nis",
-    // begitu juga "NIS/NIPD". Kalau hanya dicek pakai .includes('nis'),
-    // dua kolom itu jadi tidak bisa dibedakan -> kolom yang belakangan
-    // pada urutan akan menimpa (overwrite) hasil deteksi kolom sebelumnya.
-    // Fungsi ini secara eksplisit MENGECUALIKAN "nisn" dari pencocokan
-    // NIS/NIPD, supaya keduanya tidak lagi tertukar.
+    // Cari index kolom berdasarkan JUDUL PERSIS (exact match, case-insensitive,
+    // spasi di ujung diabaikan) -- bukan tebak-tebakan berdasarkan kata kunci.
+    // Ini menggantikan pendekatan lama yang salah menganggap "NISN" sebagai
+    // "NIS/NIPD", "Nama Ayah/Ibu" sebagai "Nama", atau nama asli siswa seperti
+    // "Purnama" sebagai baris header, karena semuanya cuma dicek pakai
+    // .includes(). Dengan exact match, kolom yang diambil selalu persis sesuai
+    // yang Anda tentukan di Pengaturan.
     // ---------------------------------------------------------------
-    function classifyKolomSiswa(labelRaw) {
-      const label = (labelRaw || '').toLowerCase().trim();
-      const isNISN = label.includes('nisn');
-
-      if (!isNISN && (label.includes('nipd') || label.includes('nis'))) {
-        return 'nis';
-      }
-
-      // "Nama" bisa muncul di banyak kolom lain di sheet database siswa yang
-      // lengkap: Nama Ayah, Nama Ibu, Nama Wali, Nama Panggilan, dst. Kolom
-      // ini HARUS dikecualikan, kalau tidak kolom terakhir yang match akan
-      // menimpa kolom "Nama Lengkap" yang sebenarnya jadi kunci.
-      const isNamaLain = label.includes('ayah') || label.includes('ibu') ||
-                          label.includes('wali') || label.includes('orang tua') ||
-                          label.includes('ortu') || label.includes('panggilan');
-      if (!isNamaLain && label.includes('nama')) {
-        return 'nama';
-      }
-
-      if (label.includes('kelas') || label.includes('rombel')) {
-        return 'kelas';
-      }
-      if (label.includes('tahun')) {
-        return 'tahun';
-      }
-      return null;
+    function cariIndexKolomPersis(cols, judulKolom) {
+      if (!cols || !judulKolom) return null;
+      const target = judulKolom.toLowerCase().trim();
+      const idx = cols.findIndex(col => (col.label || '').toLowerCase().trim() === target);
+      return idx === -1 ? null : idx;
     }
 
     // Ambil satu tab/sheet dari spreadsheet via gviz. sheetName kosong berarti
@@ -724,18 +763,12 @@
         const table = await fetchGvizTable(sheetId, tabName);
         if (!table.rows) return kelasMap;
 
-        let nisIdx = null, kelasIdx = null, tahunIdx = null;
-        if (table.cols) {
-          table.cols.forEach((col, idx) => {
-            const kind = classifyKolomSiswa(col.label);
-            if (kind === 'nis') nisIdx = idx;
-            else if (kind === 'kelas') kelasIdx = idx;
-            else if (kind === 'tahun') tahunIdx = idx;
-          });
-        }
+        const nisIdx = cariIndexKolomPersis(table.cols, kolomNisRiwayat);
+        const kelasIdx = cariIndexKolomPersis(table.cols, kolomKelasRiwayat);
+        const tahunIdx = cariIndexKolomPersis(table.cols, kolomTahunRiwayat);
 
         if (nisIdx === null || kelasIdx === null) {
-          console.warn(`Tab "${tabName}": kolom NIS dan/atau Kelas tidak terdeteksi dari header, riwayat kelas dilewati.`);
+          console.warn(`Tab "${tabName}": kolom "${kolomNisRiwayat}" dan/atau "${kolomKelasRiwayat}" tidak ditemukan persis di header, riwayat kelas dilewati.`);
           return kelasMap;
         }
 
@@ -773,6 +806,13 @@
       const tabRiwayatInput = document.getElementById('settingTabRiwayatKelas');
       const tabRiwayat = (tabRiwayatInput ? tabRiwayatInput.value.trim() : '') || tabRiwayatKelas;
 
+      // Nama kolom persis yang mau diambil (bisa diisi user di Pengaturan,
+      // kalau kosong pakai default yang tersimpan).
+      const kolomNisInput = document.getElementById('settingKolomNisUtama');
+      const kolomNis = (kolomNisInput ? kolomNisInput.value.trim() : '') || kolomNisUtama;
+      const kolomNamaInput = document.getElementById('settingKolomNamaUtama');
+      const kolomNama = (kolomNamaInput ? kolomNamaInput.value.trim() : '') || kolomNamaUtama;
+
       const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
       const sheetId = match ? match[1] : url;
 
@@ -780,44 +820,21 @@
         const table = await fetchGvizTable(sheetId);
         if (!table.rows) return;
 
-        // Tidak lagi menebak index default (0/1/2) untuk masing-masing kolom.
-        // Kalau sebuah kolom (misalnya "Kelas") memang tidak ada di header,
-        // lebih aman dibiarkan tidak ditemukan daripada diam-diam menunjuk
-        // ke kolom lain yang salah (bug sebelumnya: default kelasIdx=2 malah
-        // jatuh ke kolom "Panggilan" ketika sheet tidak punya kolom Kelas).
-        let nisIdx = null, namaIdx = null, kelasIdx = null;
-        let foundFromCols = false;
+        // Cocokkan PERSIS sesuai judul kolom yang ditentukan di Pengaturan --
+        // tidak ada lagi tebak-tebakan berbasis kata kunci. Kalau kolomnya
+        // tidak ditemukan persis (typo, judul beda), jatuh balik ke asumsi
+        // paling umum (A=NIS/NIPD, B=Nama) supaya app tetap bisa jalan.
+        let nisIdx = cariIndexKolomPersis(table.cols, kolomNis);
+        let namaIdx = cariIndexKolomPersis(table.cols, kolomNama);
 
-        if (table.cols) {
-          table.cols.forEach((col, idx) => {
-            const kind = classifyKolomSiswa(col.label);
-            if (kind === 'nis') { nisIdx = idx; foundFromCols = true; }
-            else if (kind === 'nama') { namaIdx = idx; foundFromCols = true; }
-            else if (kind === 'kelas') { kelasIdx = idx; foundFromCols = true; }
-          });
+        if (nisIdx === null) {
+          console.warn(`Kolom "${kolomNis}" tidak ditemukan persis di header Database Siswa, pakai kolom A sebagai fallback.`);
+          nisIdx = 0;
         }
-
-        // Fallback ini HANYA dipakai kalau deteksi dari cols di atas gagal total
-        // (misalnya header sheet tidak terbaca sebagai label kolom oleh gviz).
-        // Sebelumnya blok ini jalan tanpa syarat dan bisa menimpa hasil yang
-        // sudah benar dari cols -- itu salah satu sumber bug tertukarnya key.
-        if (!foundFromCols && table.rows.length > 0 && table.rows[0].c) {
-          table.rows[0].c.forEach((cell, idx) => {
-            const val = cell && cell.v != null ? String(cell.v) : '';
-            const kind = classifyKolomSiswa(val);
-            if (kind === 'nis') nisIdx = idx;
-            else if (kind === 'nama') namaIdx = idx;
-            else if (kind === 'kelas') kelasIdx = idx;
-          });
+        if (namaIdx === null) {
+          console.warn(`Kolom "${kolomNama}" tidak ditemukan persis di header Database Siswa, pakai kolom B sebagai fallback.`);
+          namaIdx = 1;
         }
-
-        // Kalau NIS/NIPD atau Nama tetap tidak ketemu sama sekali, jatuh balik
-        // ke asumsi paling umum (A=NIS/NIPD, B=Nama) supaya app tetap bisa
-        // jalan alih-alih diam-diam gagal total. Kelas TIDAK diberi fallback
-        // index karena kalau memang kolomnya tidak ada, menebak index lain
-        // hanya akan menampilkan data yang salah (seperti kasus "Panggilan").
-        if (nisIdx === null) nisIdx = 0;
-        if (namaIdx === null) namaIdx = 1;
 
         // Kelas siswa dicatat per Tahun Pelajaran di tab terpisah ("Riwayat
         // Kelas"), bukan kolom tetap di Database Siswa. Ambil sekarang,
@@ -838,19 +855,6 @@
 
           const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
           const namaVal = row.c[namaIdx]?.v != null ? String(row.c[namaIdx].v).trim() : '';
-          const kelasLangsungVal = (kelasIdx != null && row.c[kelasIdx]?.v != null) ? String(row.c[kelasIdx].v).trim() : '';
-
-          const nisLower = nisVal.toLowerCase();
-          const namaLower = namaVal.toLowerCase();
-          // PENTING: deteksi baris header pakai EXACT MATCH, bukan substring.
-          // Sebelumnya pakai .includes('nama'), yang salah menganggap nama
-          // asli siswa seperti "Purnama" (mengandung substring "nama") sebagai
-          // baris header dan membuangnya. Header sheet biasanya berisi teks
-          // pendek yang persis sama dengan salah satu label ini, jadi exact
-          // match jauh lebih aman untuk data nama sungguhan.
-          const HEADER_NIS_LABELS = ['nis', 'nipd', 'nis/nipd', 'no induk siswa'];
-          const HEADER_NAMA_LABELS = ['nama', 'nama lengkap', 'nama siswa', 'nama peserta didik'];
-          const isHeader = HEADER_NIS_LABELS.includes(nisLower) || HEADER_NAMA_LABELS.includes(namaLower);
 
           if (!nisVal) {
             skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom NIS/NIPD kosong', nama: namaVal || '(kosong)' });
@@ -860,15 +864,10 @@
             skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom Nama kosong', nis: nisVal });
             return;
           }
-          if (isHeader) {
-            skippedRows.push({ row: sheetRowNumber, alasan: 'Terdeteksi sebagai baris header/pemisah (nilai sel persis sama dengan label header umum)', nis: nisVal, nama: namaVal });
-            return;
-          }
 
-          // Prioritas Kelas: dari tab Riwayat Kelas (Tahun Pelajaran terbaru)
-          // dulu; kalau tidak ada, pakai kolom Kelas langsung di sheet ini
-          // (kalau memang ada); kalau dua-duanya tidak ada, tampilkan '-'.
-          const kelasVal = kelasFromRiwayat.get(nisVal)?.kelas || kelasLangsungVal || '-';
+          // Kelas: dari tab Riwayat Kelas (Tahun Pelajaran terbaru); kalau
+          // NIS ini tidak ada riwayatnya, tampilkan '-'.
+          const kelasVal = kelasFromRiwayat.get(nisVal)?.kelas || '-';
 
           loadedSiswa.push({
             nis: nisVal,
