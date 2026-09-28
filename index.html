@@ -27,6 +27,7 @@
       <button data-nav="dashboard" onclick="switchTab('dashboard')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</button>
       <button data-nav="data" onclick="switchTab('data')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="award" class="w-5 h-5"></i>Data Prestasi</button>
       <button onclick="openModalTambah()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50"><i data-lucide="plus-circle" class="w-5 h-5"></i>Tambah Data</button>
+      <button onclick="bukaSheet()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50"><i data-lucide="external-link" class="w-5 h-5"></i>Buka Google Sheet</button>
       <button data-nav="settings" onclick="switchTab('settings')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="settings" class="w-5 h-5"></i>Pengaturan</button>
     </nav>
     <div class="p-4 border-t border-gray-100">
@@ -47,6 +48,7 @@
         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
         <input id="globalSearch" onkeyup="if(event.key==='Enter'){switchTab('data');$('filterSearch').value=this.value;renderTable()}" placeholder="Cari lalu Enter..." class="pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-xs w-56 focus:outline-none focus:ring-2 focus:ring-violet-500/20">
       </div>
+      <button onclick="bukaSheet()" title="Buka Google Sheet data prestasi" class="px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs flex items-center gap-1.5"><i data-lucide="external-link" class="w-4 h-4"></i><span class="hidden sm:inline">Buka Sheet</span></button>
       <button onclick="loadPrestasi(true)" title="Muat ulang dari sheet" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
       <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-1.5"><i data-lucide="plus" class="w-4 h-4"></i>Tambah Prestasi</button>
     </div>
@@ -68,6 +70,7 @@
         <div class="bg-white rounded-2xl border border-gray-200 p-5"><p class="text-xs font-semibold text-gray-500">Capaian Bulan Ini</p><p id="mBulan" class="text-3xl font-bold mt-1">0</p></div>
       </div>
       <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="mb-5"><p class="text-xs font-bold text-gray-500 mb-2">Prestasi per Tahun Pelajaran (klik untuk melihat)</p><div id="tahunChips" class="flex flex-wrap gap-2"></div></div>
         <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm sm:text-base">Prestasi Terbaru</h3><button onclick="switchTab('data')" class="text-xs font-bold text-violet-700">Lihat Semua</button></div>
         <div id="recentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
       </div>
@@ -75,12 +78,16 @@
 
     <!-- DATA -->
     <div id="view-data" class="hidden space-y-4">
-      <div class="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between gap-3">
+      <div class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-wrap items-center justify-between gap-3">
         <div class="relative flex-1 sm:max-w-sm">
           <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
           <input id="filterSearch" oninput="renderTable()" placeholder="Cari NIS, nama, lomba, kategori..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-violet-500">
         </div>
-        <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 font-bold text-xs rounded-xl">Tambah Data</button>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="filterTahun" onchange="renderTable()" class="fld !w-auto"><option value="">Semua Tahun Pelajaran</option></select>
+          <label class="flex items-center gap-1.5 text-xs font-semibold text-gray-600 cursor-pointer"><input type="checkbox" id="groupTahun" onchange="renderTable()" class="accent-violet-600"> Kelompokkan per tahun</label>
+          <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 font-bold text-xs rounded-xl">Tambah Data</button>
+        </div>
       </div>
       <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto">
@@ -104,6 +111,7 @@
           <p class="text-xs font-bold text-violet-900">Penyimpanan Prestasi (Apps Script)</p>
           <div><label class="block text-[11px] font-semibold mb-1">URL Web App (/exec)</label><input id="sScriptUrl" class="fld" placeholder="https://script.google.com/macros/s/.../exec"></div>
           <div><label class="block text-[11px] font-semibold mb-1">Token (sama dengan TOKEN di Code.gs)</label><input id="sToken" class="fld" type="password"></div>
+          <div><label class="block text-[11px] font-semibold mb-1">URL Spreadsheet Data Prestasi (untuk tombol "Buka Sheet")</label><input id="sSheetPrestasi" class="fld"></div>
         </div>
 
         <div class="space-y-3">
@@ -146,7 +154,7 @@
   <div class="flex min-h-full items-center justify-center p-4">
     <div class="relative bg-white rounded-2xl w-full max-w-xl shadow-xl border border-gray-100 overflow-hidden">
       <div class="bg-violet-50/70 px-6 py-4 border-b border-violet-100 flex items-center justify-between">
-        <h3 class="text-base font-bold">Pencatatan Prestasi Siswa</h3>
+        <h3 id="modalTitle" class="text-base font-bold">Pencatatan Prestasi Siswa</h3>
         <button onclick="closeModalTambah()" class="text-gray-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       <form id="formPrestasi" onsubmit="handleSubmit(event)" class="p-6 space-y-4">
@@ -174,12 +182,17 @@
         <div><label class="block text-xs font-semibold mb-1">Nama Lomba / Kejuaraan</label><input id="inputLomba" required class="fld"></div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div><label class="block text-xs font-semibold mb-1">Penyelenggara</label><input id="inputPenyelenggara" required class="fld"></div>
-          <div><label class="block text-xs font-semibold mb-1">Tanggal</label><input type="date" id="inputTanggal" required class="fld"></div>
+          <div><label class="block text-xs font-semibold mb-1">Tanggal</label><input type="date" id="inputTanggal" required onchange="isiOpsiTahun()" class="fld"></div>
         </div>
         <div><label class="block text-xs font-semibold mb-1">Tempat / Lokasi</label><input id="inputTempat" required class="fld"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 p-3.5 bg-violet-50/60 rounded-xl border border-violet-100">
+          <div><label class="block text-xs font-semibold mb-1">Tahun Pelajaran (dari Riwayat Kelas)</label><select id="inputTahun" onchange="updateKelas()" required class="fld"></select></div>
+          <div><label class="block text-xs font-semibold mb-1">Kelas pada tahun tsb (otomatis)</label><input id="inputKelas" readonly class="fld !bg-gray-100"></div>
+        </div>
         <div>
           <label class="block text-xs font-semibold mb-1">Foto Bukti / Sertifikat (opsional, via Cloudinary)</label>
           <input type="file" id="fileInput" accept="image/*" class="block w-full text-xs text-gray-600 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-violet-100 file:text-violet-700 file:font-semibold">
+          <p id="fotoNote" class="text-[11px] text-gray-500 mt-1"></p>
         </div>
         <div class="pt-3 flex justify-end gap-3 border-t border-gray-100">
           <button type="button" onclick="closeModalTambah()" class="px-4 py-2.5 bg-white border border-gray-200 font-semibold text-xs rounded-xl">Batal</button>
@@ -214,13 +227,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 // ---------- SETTINGS ----------
 const DEFAULTS = {
   scriptUrl: '', token: '',
+  sheetPrestasi: 'https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit',
   sheetSiswa: 'https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit',
   tabRiwayat: 'Riwayat Kelas',
   kolNisU: 'NIS/NIPD', kolNamaU: 'Nama Lengkap',
   kolTahunR: 'Tahun Pelajaran', kolNisR: 'NIS', kolKelasR: 'Kelas',
   cloudName: '', cloudPreset: ''
 };
-const FIELD_IDS = { scriptUrl:'sScriptUrl', token:'sToken', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
+const FIELD_IDS = { scriptUrl:'sScriptUrl', token:'sToken', sheetPrestasi:'sSheetPrestasi', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
 let S = { ...DEFAULTS };
 try { S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('prestunas_settings') || '{}') }; } catch (e) {}
 
@@ -285,7 +299,7 @@ async function gviz(id, tab) {
   return data.table;
 }
 async function fetchKelasMap(id) {
-  const map = new Map();
+  const map = new Map();   // NIS -> [{tahun, kelas}] (terbaru di urutan pertama)
   try {
     const t = await gviz(id, S.tabRiwayat);
     const ni = idxPersis(t.cols, S.kolNisR), ki = idxPersis(t.cols, S.kolKelasR), ti = idxPersis(t.cols, S.kolTahunR);
@@ -296,9 +310,12 @@ async function fetchKelasMap(id) {
       const kelas = r.c[ki]?.v != null ? String(r.c[ki].v).trim() : '';
       const tahun = ti != null && r.c[ti]?.v != null ? String(r.c[ti].v).trim() : '';
       if (!nis || !kelas) return;
-      const ex = map.get(nis);
-      if (!ex || (tahun && (!ex.tahun || tahun >= ex.tahun)) || (!tahun && !ex.tahun)) map.set(nis, { kelas, tahun });
+      const arr = map.get(nis) || [];
+      const ex = arr.find(x => normTahun(x.tahun) === normTahun(tahun));
+      if (ex) ex.kelas = kelas; else arr.push({ tahun, kelas });
+      map.set(nis, arr);
     });
+    map.forEach(arr => arr.sort((x, y) => normTahun(y.tahun).localeCompare(normTahun(x.tahun))));
   } catch (e) { console.warn('Riwayat Kelas gagal dimuat', e); }
   return map;
 }
@@ -315,7 +332,8 @@ async function fetchSiswa() {
       const nis = r.c[ni]?.v != null ? String(r.c[ni].v).trim() : '';
       const nama = r.c[na]?.v != null ? String(r.c[na].v).trim() : '';
       if (!nis || !nama) { skipped++; return; }
-      list.push({ nis, nama, kelas: kelasMap.get(nis)?.kelas || '-' });
+      const riw = kelasMap.get(nis) || [];
+      list.push({ nis, nama, kelas: riw[0]?.kelas || '-', riwayat: riw });
     });
     if (list.length) {
       masterSiswa = list;
@@ -326,6 +344,35 @@ async function fetchSiswa() {
     console.warn(err);
     $('statusSiswa').textContent = 'Status siswa: gagal memuat (pastikan sheet dibagikan publik).';
   }
+}
+
+// ---------- TAHUN PELAJARAN ----------
+const normTahun = s => String(s || '').replace(/\s/g, '').replace(/-/g, '/');
+function tahunDariTanggal(t) {   // tahun pelajaran Juli - Juni
+  const m = /^(\d{4})-(\d{2})/.exec(t || ''); if (!m) return '';
+  const y = +m[1], mo = +m[2];
+  return mo >= 7 ? `${y}/${y + 1}` : `${y - 1}/${y}`;
+}
+const tahunItem = d => d.tahunPelajaran || tahunDariTanggal(d.tanggal) || 'Tanpa Tahun';
+const kelasPada = (s, tahun) => (s?.riwayat || []).find(x => normTahun(x.tahun) === normTahun(tahun))?.kelas || '';
+
+function isiOpsiTahun(preferred) {
+  const s = masterSiswa.find(x => x.nis === $('selectedNIS').value);
+  const opts = new Map();
+  (s?.riwayat || []).forEach(r => { if (r.tahun) opts.set(normTahun(r.tahun), r.tahun); });
+  const dari = tahunDariTanggal($('inputTanggal').value);
+  if (dari && !opts.has(normTahun(dari))) opts.set(normTahun(dari), dari);
+  if (preferred && !opts.has(normTahun(preferred))) opts.set(normTahun(preferred), preferred);
+  const list = [...opts.values()].sort().reverse();
+  $('inputTahun').innerHTML = list.length ? list.map(o => `<option>${esc(o)}</option>`).join('') : '<option value="">Pilih siswa / tanggal dulu</option>';
+  const pick = preferred || dari || s?.riwayat?.[0]?.tahun || '';
+  const m = list.find(o => normTahun(o) === normTahun(pick));
+  if (m) $('inputTahun').value = m;
+  updateKelas();
+}
+function updateKelas() {
+  const s = masterSiswa.find(x => x.nis === $('selectedNIS').value);
+  $('inputKelas').value = kelasPada(s, $('inputTahun').value) || '-';
 }
 
 // ---------- AUTOCOMPLETE ----------
@@ -351,6 +398,7 @@ $('nisSuggestions').addEventListener('click', e => {
   b.innerHTML = `<div><span class="font-bold">${esc(s.nama)}</span><span class="text-gray-500 ml-2">NIS: ${esc(s.nis)}</span></div><span class="px-2 py-0.5 bg-violet-100 text-violet-700 font-semibold rounded-full text-[10px]">Kelas ${esc(s.kelas)}</span>`;
   b.classList.remove('hidden'); b.classList.add('flex');
   $('nisSuggestions').classList.add('hidden');
+  isiOpsiTahun();
 });
 function toggleLain(v) {
   const f = $('inputLain');
@@ -383,28 +431,28 @@ async function handleSubmit(e) {
   const btn = $('btnSimpan'); btn.disabled = true; btn.textContent = 'Menyimpan...';
   try {
     const file = $('fileInput').files[0];
-    fotoUrl = file ? await uploadCloudinary(file) : '';
+    const old = editingId ? dataPrestasi.find(d => d.id === editingId) : null;
+    fotoUrl = file ? await uploadCloudinary(file) : (old ? old.foto : '');
 
     const now = Date.now();
     const item = {
-      id: String(now), nis, namaSiswa: nama, pencapaian,
+      id: old ? old.id : String(now), nis, namaSiswa: nama, pencapaian,
       kategori: $('inputKategori').value.trim(), namaLomba: $('inputLomba').value.trim(),
       penyelenggara: $('inputPenyelenggara').value.trim(), tanggal: $('inputTanggal').value,
-      tempat: $('inputTempat').value.trim(), foto: fotoUrl, createdAt: String(now)
+      tempat: $('inputTempat').value.trim(), foto: fotoUrl, createdAt: old ? old.createdAt : String(now),
+      tahunPelajaran: $('inputTahun').value, kelas: $('inputKelas').value === '-' ? '' : $('inputKelas').value
     };
-    await apiPost({ action: 'add', item });   // tulis ke sheet DULU
+    await apiPost({ action: old ? 'update' : 'add', item });   // tulis ke sheet DULU
 
-    dataPrestasi.unshift(item);
+    if (old) dataPrestasi[dataPrestasi.indexOf(old)] = item; else dataPrestasi.unshift(item);
     renderAll(); closeModalTambah();
-    $('formPrestasi').reset(); toggleLain('');
-    $('siswaBadge').classList.add('hidden'); $('siswaBadge').classList.remove('flex');
-    $('selectedNIS').value = ''; $('selectedNama').value = '';
-    toast('Prestasi tersimpan ke spreadsheet', 'success');
+    toast(old ? 'Perubahan tersimpan ke spreadsheet' : 'Prestasi tersimpan ke spreadsheet', 'success');
+    editingId = null; resetForm();
   } catch (err) {
     console.error(err);
     toast('Gagal menyimpan: ' + err.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Simpan ke Spreadsheet';
+    btn.disabled = false; btn.textContent = editingId ? 'Simpan Perubahan' : 'Simpan ke Spreadsheet';
   }
 }
 
@@ -418,7 +466,7 @@ async function deletePrestasi(id) {
 }
 
 // ---------- RENDER ----------
-function renderAll() { renderDashboard(); renderTable(); }
+function renderAll() { renderTahunFilter(); renderDashboard(); renderTable(); }
 
 function renderDashboard() {
   $('mTotal').textContent = dataPrestasi.length;
@@ -437,23 +485,50 @@ function renderDashboard() {
     </div>`).join('') : '<p class="text-xs text-gray-400 col-span-full">Belum ada data prestasi.</p>';
 }
 
-function renderTable() {
-  const q = ($('filterSearch').value || '').toLowerCase();
-  const items = dataPrestasi.filter(d => [d.namaSiswa, d.nis, d.namaLomba, d.kategori, d.pencapaian].some(v => (v || '').toLowerCase().includes(q)));
-  $('emptyState').classList.toggle('hidden', items.length > 0);
-  $('tbody').innerHTML = items.map(it => `
+const daftarTahun = () => [...new Set(dataPrestasi.map(tahunItem))].sort().reverse();
+function renderTahunFilter() {
+  const sel = $('filterTahun'), cur = sel.value, list = daftarTahun();
+  sel.innerHTML = '<option value="">Semua Tahun Pelajaran</option>' + list.map(t => `<option>${esc(t)}</option>`).join('');
+  sel.value = list.includes(cur) ? cur : '';
+  $('tahunChips').innerHTML = list.map(t => `<button data-tahun="${esc(t)}" class="chip px-3 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-800 rounded-full text-xs font-semibold">${esc(t)} <span class="ml-1 px-1.5 py-0.5 bg-white rounded-full text-[10px]">${dataPrestasi.filter(d => tahunItem(d) === t).length}</span></button>`).join('') || '<p class="text-xs text-gray-400">Belum ada data.</p>';
+}
+$('tahunChips').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  switchTab('data'); $('filterTahun').value = b.dataset.tahun; renderTable();
+});
+
+function rowHtml(it) {
+  return `
     <tr class="hover:bg-gray-50">
       <td class="py-3 px-4">${imgTag(it, 'w-10 h-10 object-cover rounded-lg border border-gray-200')}</td>
-      <td class="py-3 px-4"><p class="font-bold">${esc(it.namaSiswa)}</p><p class="text-[10px] text-violet-700 font-mono">${esc(it.nis)}</p></td>
+      <td class="py-3 px-4"><p class="font-bold">${esc(it.namaSiswa)}</p><p class="text-[10px] text-violet-700 font-mono">${esc(it.nis)}</p><p class="text-[10px] text-gray-500">${it.kelas ? 'Kelas ' + esc(it.kelas) + ' • ' : ''}${esc(tahunItem(it))}</p></td>
       <td class="py-3 px-4"><span class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-[11px] rounded-full">${esc(it.pencapaian)}</span></td>
       <td class="py-3 px-4"><p class="font-medium">${esc(it.namaLomba)}</p><p class="text-[10px] text-gray-500">${esc(it.kategori)}</p></td>
       <td class="py-3 px-4 text-gray-600">${esc(it.penyelenggara)}</td>
       <td class="py-3 px-4 text-gray-500"><p>${esc(it.tanggal)}</p><p class="text-[10px] text-gray-400">${esc(it.tempat)}</p></td>
       <td class="py-3 px-4 text-center whitespace-nowrap">
         <button onclick="openDetail('${esc(it.id)}')" class="p-1.5 text-gray-400 hover:text-violet-600"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        <button onclick="openEdit('${esc(it.id)}')" title="Edit" class="p-1.5 text-gray-400 hover:text-amber-600"><i data-lucide="pencil" class="w-4 h-4"></i></button>
         <button onclick="deletePrestasi('${esc(it.id)}')" class="p-1.5 text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+}
+
+function renderTable() {
+  const q = ($('filterSearch').value || '').toLowerCase(), th = $('filterTahun').value, grup = $('groupTahun').checked;
+  const items = dataPrestasi.filter(d => (!th || tahunItem(d) === th) &&
+    [d.namaSiswa, d.nis, d.namaLomba, d.kategori, d.pencapaian].some(v => (v || '').toLowerCase().includes(q)));
+  if (grup) items.sort((a, b) => tahunItem(b).localeCompare(tahunItem(a)) || Number(b.createdAt || b.id) - Number(a.createdAt || a.id));
+  $('emptyState').classList.toggle('hidden', items.length > 0);
+  let last = null, html = '';
+  items.forEach(it => {
+    if (grup && tahunItem(it) !== last) {
+      last = tahunItem(it);
+      html += `<tr class="bg-violet-50"><td colspan="7" class="py-2 px-4 text-xs font-bold text-violet-800">Tahun Pelajaran ${esc(last)} <span class="font-medium text-violet-600">(${items.filter(x => tahunItem(x) === last).length} prestasi)</span></td></tr>`;
+    }
+    html += rowHtml(it);
+  });
+  $('tbody').innerHTML = html;
   if (window.lucide) lucide.createIcons();
 }
 
@@ -470,6 +545,8 @@ function openDetail(id) {
       <div><span class="text-gray-400 block text-[10px]">PENYELENGGARA</span><b>${esc(it.penyelenggara)}</b></div>
       <div><span class="text-gray-400 block text-[10px]">TANGGAL</span><b>${esc(it.tanggal)}</b></div>
       <div><span class="text-gray-400 block text-[10px]">TEMPAT</span><b>${esc(it.tempat)}</b></div>
+      <div><span class="text-gray-400 block text-[10px]">TAHUN PELAJARAN</span><b>${esc(tahunItem(it))}</b></div>
+      <div><span class="text-gray-400 block text-[10px]">KELAS</span><b>${esc(it.kelas || '-')}</b></div>
     </div>
     ${it.foto ? `<img src="${esc(thumb(it.foto, 'w_800,q_auto,f_auto'))}" class="w-full max-h-72 object-contain rounded-xl border border-gray-200 bg-gray-50" alt="Bukti">` : ''}`;
   $('modalDetail').classList.remove('hidden');
@@ -486,7 +563,41 @@ function switchTab(tab) {
   document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.nav === tab));
   $('pageTitle').textContent = TITLES[tab][0]; $('pageSub').textContent = TITLES[tab][1];
 }
-function openModalTambah() { $('modalTambah').classList.remove('hidden'); }
+function bukaSheet() {
+  if (!S.sheetPrestasi) { toast('Isi URL Spreadsheet Data Prestasi di Pengaturan', 'warning'); switchTab('settings'); return; }
+  window.open(`https://docs.google.com/spreadsheets/d/${sheetId(S.sheetPrestasi)}/edit`, '_blank', 'noopener');
+}
+let editingId = null;
+function resetForm() {
+  $('formPrestasi').reset(); toggleLain('');
+  $('selectedNIS').value = ''; $('selectedNama').value = '';
+  $('siswaBadge').classList.add('hidden'); $('siswaBadge').classList.remove('flex');
+  $('fotoNote').textContent = '';
+  $('inputTahun').innerHTML = ''; $('inputKelas').value = '';
+  $('modalTitle').textContent = editingId ? 'Edit Prestasi Siswa' : 'Pencatatan Prestasi Siswa';
+  $('btnSimpan').textContent = editingId ? 'Simpan Perubahan' : 'Simpan ke Spreadsheet';
+}
+function openModalTambah() { editingId = null; resetForm(); $('modalTambah').classList.remove('hidden'); }
+function openEdit(id) {
+  const it = dataPrestasi.find(d => d.id === id); if (!it) return;
+  editingId = id; resetForm();
+  $('selectedNIS').value = it.nis; $('selectedNama').value = it.namaSiswa;
+  $('inputNISQuery').value = `${it.namaSiswa} (${it.nis})`;
+  const kelas = masterSiswa.find(s => s.nis === it.nis)?.kelas || '-';
+  const b = $('siswaBadge');
+  b.innerHTML = `<div><span class="font-bold">${esc(it.namaSiswa)}</span><span class="text-gray-500 ml-2">NIS: ${esc(it.nis)}</span></div><span class="px-2 py-0.5 bg-violet-100 text-violet-700 font-semibold rounded-full text-[10px]">Kelas ${esc(kelas)}</span>`;
+  b.classList.remove('hidden'); b.classList.add('flex');
+  const sel = $('inputPencapaian');
+  const known = [...sel.options].some(o => o.value === it.pencapaian && o.value !== 'Lainnya');
+  sel.value = known ? it.pencapaian : 'Lainnya'; toggleLain(sel.value);
+  if (!known) $('inputLain').value = it.pencapaian;
+  $('inputKategori').value = it.kategori; $('inputLomba').value = it.namaLomba;
+  $('inputPenyelenggara').value = it.penyelenggara; $('inputTanggal').value = it.tanggal;
+  $('inputTempat').value = it.tempat;
+  isiOpsiTahun(it.tahunPelajaran || '');
+  $('fotoNote').textContent = it.foto ? 'Foto saat ini dipertahankan. Pilih file baru untuk menggantinya.' : '';
+  $('modalTambah').classList.remove('hidden');
+}
 function closeModalTambah() { $('modalTambah').classList.add('hidden'); }
 
 function toast(msg, type = 'success') {
