@@ -720,8 +720,17 @@
         }
 
         const loadedSiswa = [];
-        data.table.rows.forEach(row => {
-          if (!row.c) return;
+        const skippedRows = []; // diagnostik: catat baris yang terlewat + alasannya
+
+        data.table.rows.forEach((row, rowIdx) => {
+          // Baris ke-berapa di spreadsheet (row 1 = header, jadi data dimulai dari row 2)
+          const sheetRowNumber = rowIdx + 2;
+
+          if (!row.c) {
+            skippedRows.push({ row: sheetRowNumber, alasan: 'Baris kosong total (row.c null)' });
+            return;
+          }
+
           const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
           const namaVal = row.c[namaIdx]?.v != null ? String(row.c[namaIdx].v).trim() : '';
           const kelasVal = row.c[kelasIdx]?.v != null ? String(row.c[kelasIdx].v).trim() : '';
@@ -730,22 +739,45 @@
           const namaLower = namaVal.toLowerCase();
           const isHeader = nisLower.includes('nis') || nisLower.includes('nipd') || namaLower.includes('nama');
 
-          if (nisVal && namaVal && !isHeader) {
-            loadedSiswa.push({
-              nis: nisVal,
-              nama: namaVal,
-              kelas: kelasVal || '-'
-            });
+          if (!nisVal) {
+            skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom NIS/NIPD kosong', nama: namaVal || '(kosong)' });
+            return;
           }
+          if (!namaVal) {
+            skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom Nama kosong', nis: nisVal });
+            return;
+          }
+          if (isHeader) {
+            skippedRows.push({ row: sheetRowNumber, alasan: 'Terdeteksi sebagai baris header/pemisah (nilai mengandung "nis"/"nipd"/"nama")', nis: nisVal, nama: namaVal });
+            return;
+          }
+
+          loadedSiswa.push({
+            nis: nisVal,
+            nama: namaVal,
+            kelas: kelasVal || '-'
+          });
         });
+
+        if (skippedRows.length > 0) {
+          console.warn(`${skippedRows.length} baris terlewat saat sync data siswa. Detail per baris:`);
+          console.table(skippedRows);
+        }
 
         if (loadedSiswa.length > 0) {
           masterSiswa = loadedSiswa;
           const statusElem = document.getElementById('statusSyncSiswaText');
+          const totalRowsInSheet = data.table.rows.length;
           if (statusElem) {
-            statusElem.innerText = `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat (Primary Key: Kolom A - NIS/NIPD)!`;
+            statusElem.innerText = skippedRows.length > 0
+              ? `Status Relasi: ${masterSiswa.length} dari ${totalRowsInSheet} baris berhasil dimuat (${skippedRows.length} baris terlewat, lihat Console untuk detail).`
+              : `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat (Primary Key: Kolom A - NIS/NIPD)!`;
           }
-          showToast(`Berhasil memuat ${masterSiswa.length} data siswa (Kunci NIS/NIPD)!`, 'success');
+          if (skippedRows.length > 0) {
+            showToast(`Dimuat ${masterSiswa.length}/${totalRowsInSheet} siswa. ${skippedRows.length} baris terlewat — cek Console (F12).`, 'warning');
+          } else {
+            showToast(`Berhasil memuat ${masterSiswa.length} data siswa (Kunci NIS/NIPD)!`, 'success');
+          }
         }
       } catch (err) {
         console.warn('Sync live data siswa Google Sheets:', err);
