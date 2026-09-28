@@ -842,7 +842,15 @@
 
           const nisLower = nisVal.toLowerCase();
           const namaLower = namaVal.toLowerCase();
-          const isHeader = nisLower.includes('nis') || nisLower.includes('nipd') || namaLower.includes('nama');
+          // PENTING: deteksi baris header pakai EXACT MATCH, bukan substring.
+          // Sebelumnya pakai .includes('nama'), yang salah menganggap nama
+          // asli siswa seperti "Purnama" (mengandung substring "nama") sebagai
+          // baris header dan membuangnya. Header sheet biasanya berisi teks
+          // pendek yang persis sama dengan salah satu label ini, jadi exact
+          // match jauh lebih aman untuk data nama sungguhan.
+          const HEADER_NIS_LABELS = ['nis', 'nipd', 'nis/nipd', 'no induk siswa'];
+          const HEADER_NAMA_LABELS = ['nama', 'nama lengkap', 'nama siswa', 'nama peserta didik'];
+          const isHeader = HEADER_NIS_LABELS.includes(nisLower) || HEADER_NAMA_LABELS.includes(namaLower);
 
           if (!nisVal) {
             skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom NIS/NIPD kosong', nama: namaVal || '(kosong)' });
@@ -853,7 +861,7 @@
             return;
           }
           if (isHeader) {
-            skippedRows.push({ row: sheetRowNumber, alasan: 'Terdeteksi sebagai baris header/pemisah (nilai mengandung "nis"/"nipd"/"nama")', nis: nisVal, nama: namaVal });
+            skippedRows.push({ row: sheetRowNumber, alasan: 'Terdeteksi sebagai baris header/pemisah (nilai sel persis sama dengan label header umum)', nis: nisVal, nama: namaVal });
             return;
           }
 
