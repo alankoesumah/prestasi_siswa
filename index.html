@@ -646,6 +646,31 @@
       showToast('Pengaturan Koneksi Spreadsheet Berhasil Disimpan!', 'success');
     }
 
+    // ---------------------------------------------------------------
+    // Helper: klasifikasi label kolom secara presisi.
+    // "NISN" (Nomor Induk Siswa Nasional) mengandung substring "nis",
+    // begitu juga "NIS/NIPD". Kalau hanya dicek pakai .includes('nis'),
+    // dua kolom itu jadi tidak bisa dibedakan -> kolom yang belakangan
+    // pada urutan akan menimpa (overwrite) hasil deteksi kolom sebelumnya.
+    // Fungsi ini secara eksplisit MENGECUALIKAN "nisn" dari pencocokan
+    // NIS/NIPD, supaya keduanya tidak lagi tertukar.
+    // ---------------------------------------------------------------
+    function classifyKolomSiswa(labelRaw) {
+      const label = (labelRaw || '').toLowerCase().trim();
+      const isNISN = label.includes('nisn');
+
+      if (!isNISN && (label.includes('nipd') || label.includes('nis'))) {
+        return 'nis';
+      }
+      if (label.includes('nama')) {
+        return 'nama';
+      }
+      if (label.includes('kelas')) {
+        return 'kelas';
+      }
+      return null;
+    }
+
     async function fetchMasterSiswaFromSheet() {
       const urlInput = document.getElementById('settingSheetSiswa');
       const url = (urlInput ? urlInput.value.trim() : '') || sheetSiswaUrl;
@@ -669,22 +694,28 @@
 
         // Default Kolom A = NIS/NIPD (idx 0), B = Nama (idx 1), C = Kelas (idx 2)
         let nisIdx = 0, namaIdx = 1, kelasIdx = 2;
+        let foundFromCols = false;
 
         if (data.table.cols) {
           data.table.cols.forEach((col, idx) => {
-            const label = (col.label || '').toLowerCase();
-            if (label.includes('nis') || label.includes('nipd')) nisIdx = idx;
-            else if (label.includes('nama')) namaIdx = idx;
-            else if (label.includes('kelas')) kelasIdx = idx;
+            const kind = classifyKolomSiswa(col.label);
+            if (kind === 'nis') { nisIdx = idx; foundFromCols = true; }
+            else if (kind === 'nama') { namaIdx = idx; foundFromCols = true; }
+            else if (kind === 'kelas') { kelasIdx = idx; foundFromCols = true; }
           });
         }
 
-        if (data.table.rows.length > 0 && data.table.rows[0].c) {
+        // Fallback ini HANYA dipakai kalau deteksi dari cols di atas gagal total
+        // (misalnya header sheet tidak terbaca sebagai label kolom oleh gviz).
+        // Sebelumnya blok ini jalan tanpa syarat dan bisa menimpa hasil yang
+        // sudah benar dari cols -- itu salah satu sumber bug tertukarnya key.
+        if (!foundFromCols && data.table.rows.length > 0 && data.table.rows[0].c) {
           data.table.rows[0].c.forEach((cell, idx) => {
-            const val = cell && cell.v != null ? String(cell.v).toLowerCase().trim() : '';
-            if (val.includes('nis') || val.includes('nipd')) nisIdx = idx;
-            else if (val.includes('nama')) namaIdx = idx;
-            else if (val.includes('kelas')) kelasIdx = idx;
+            const val = cell && cell.v != null ? String(cell.v) : '';
+            const kind = classifyKolomSiswa(val);
+            if (kind === 'nis') nisIdx = idx;
+            else if (kind === 'nama') namaIdx = idx;
+            else if (kind === 'kelas') kelasIdx = idx;
           });
         }
 
