@@ -1,1231 +1,512 @@
 <!DOCTYPE html>
 <html lang="id" class="h-full bg-[#FAFAFA]">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Data Prestasi Siswa - PresTunas</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Plus Jakarta Sans', 'sans-serif'],
-          },
-          colors: {
-            brand: {
-              50: '#F5F3FF',
-              100: '#EDE9FE',
-              500: '#8B5CF6',
-              600: '#7C3AED',
-              700: '#6D28D9',
-            },
-            accent: {
-              50: '#F7FEE7',
-              100: '#ECFCCB',
-              500: '#84CC16',
-              600: '#65A30D',
-              700: '#4D7C0F',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PresTunas - Data Prestasi Siswa</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:['Plus Jakarta Sans','sans-serif']}}}}</script>
 </head>
-<body class="h-full text-gray-900 font-sans antialiased selection:bg-violet-500 selection:text-white">
+<body class="h-full text-gray-900 font-sans antialiased">
+<div class="min-h-full flex flex-col md:flex-row">
 
-  <div class="min-h-full flex flex-col md:flex-row">
-    
-    <!-- ==================== DESKTOP SIDEBAR ==================== -->
-    <aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30 bg-white border-r border-gray-200">
-      <div class="flex flex-col flex-grow pt-5 overflow-y-auto">
-        <!-- Logo & Branding with Violet Masking -->
-        <div class="flex items-center gap-3 px-6 pb-6 border-b border-gray-100">
-          <div class="w-10 h-10 bg-violet-600 flex-shrink-0" style="-webkit-mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain; mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain;"></div>
-          <div>
-            <h1 class="font-bold text-gray-900 text-base leading-tight">PresTunas</h1>
-            <p class="text-xs text-gray-500 font-medium">Data Prestasi Siswa</p>
-          </div>
-        </div>
-
-        <!-- Sheet Sync Indicator -->
-        <div class="mx-4 my-4 p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center gap-2.5">
-          <span class="relative flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-semibold text-emerald-900 truncate">Database Terhubung</p>
-            <p class="text-[11px] text-emerald-700 truncate">Google Sheets Active</p>
-          </div>
-        </div>
-
-        <!-- Navigation Links -->
-        <nav class="flex-1 px-4 space-y-1.5 mt-1">
-          <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold bg-violet-50 text-violet-700 transition-colors">
-            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-            Dashboard
-          </button>
-          <button onclick="switchTab('data')" id="nav-data" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
-            <i data-lucide="award" class="w-5 h-5"></i>
-            Data Prestasi
-          </button>
-          <button onclick="openModalTambah()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
-            <i data-lucide="plus-circle" class="w-5 h-5"></i>
-            Tambah Data
-          </button>
-          <button onclick="switchTab('settings')" id="nav-settings" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50/60 hover:text-gray-900 transition-colors">
-            <i data-lucide="settings" class="w-5 h-5"></i>
-            Pengaturan
-          </button>
-        </nav>
-
-        <!-- User Profile Card -->
-        <div class="p-4 border-t border-gray-100">
-          <div class="flex items-center gap-3 p-2 rounded-xl bg-violet-50/50">
-            <div class="w-9 h-9 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-xs">
-              LK
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-semibold text-gray-800 truncate">Lukas Koesumah</p>
-              <p class="text-[11px] text-gray-500 truncate">Guru / Admin Sekolah</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- ==================== MAIN CONTENT AREA ==================== -->
-    <div class="flex-1 md:pl-64 flex flex-col min-h-screen">
-      
-      <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3 md:hidden">
-          <div class="w-8 h-8 bg-violet-600 flex-shrink-0" style="-webkit-mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain; mask: url('https://i.imgur.com/5T1LlRI.png') no-repeat center / contain;"></div>
-          <span class="font-bold text-gray-900 text-base">PresTunas</span>
-        </div>
-
-        <div class="hidden md:block">
-          <h2 id="pageTitle" class="text-lg font-bold text-gray-900">Dashboard Utama</h2>
-          <p id="pageSub" class="text-xs text-gray-500">Ringkasan performa dan pencapaian siswa</p>
-        </div>
-
-        <!-- Global Header Quick Actions -->
-        <div class="flex items-center gap-2 sm:gap-3">
-          <div class="relative hidden sm:block">
-            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" id="globalSearch" onkeyup="handleGlobalSearch(event)" placeholder="Cari NIS / Nama siswa..." class="pl-9 pr-4 py-2 bg-gray-100 border-none rounded-xl text-xs w-56 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:bg-white transition-all">
-          </div>
-          
-          <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center gap-1.5 focus:ring-2 focus:ring-lime-400/50 active:scale-[0.98]">
-            <i data-lucide="plus" class="w-4 h-4 text-gray-900"></i>
-            <span>Tambah Prestasi</span>
-          </button>
-        </div>
-      </header>
-
-      <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 pb-24 md:pb-8">
-        
-        <!-- SECTION: DASHBOARD VIEW -->
-        <div id="view-dashboard" class="space-y-6">
-          <!-- Welcome Banner -->
-          <div class="bg-gradient-to-r from-violet-900 via-violet-800 to-slate-900 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-            <div class="relative z-10 max-w-xl">
-              <span class="px-2.5 py-1 bg-white/10 backdrop-blur-md text-violet-200 text-xs font-semibold rounded-full border border-white/10 inline-block mb-3">
-                Tahun Ajaran 2026/2027
-              </span>
-              <h2 class="text-xl sm:text-2xl font-bold mb-2">Portal Data Prestasi Siswa</h2>
-              <p class="text-violet-200 text-xs sm:text-sm leading-relaxed mb-4">
-                Pencatatan prestasi terintegrasi secara otomatis dengan Database Utama Siswa via NIS.
-              </p>
-              <button onclick="openModalTambah()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs sm:text-sm rounded-xl shadow-sm transition-all flex items-center gap-2">
-                <i data-lucide="plus-circle" class="w-4 h-4 text-gray-900"></i>
-                Input Prestasi Baru
-              </button>
-            </div>
-            <div class="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none flex items-center pr-8">
-              <i data-lucide="award" class="w-56 h-56 text-white"></i>
-            </div>
-          </div>
-
-          <!-- METRICS CARDS (4 GRID) -->
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-gray-500">Total Prestasi</span>
-                <div class="w-8 h-8 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
-                  <i data-lucide="trophy" class="w-4 h-4"></i>
-                </div>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span id="metricTotal" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[11px] font-semibold text-lime-800 bg-lime-100 px-2 py-0.5 rounded-full">Sertifikat</span>
-              </div>
-              <p class="text-[11px] text-gray-400 mt-2">Terdata dalam spreadsheet</p>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-gray-500">Siswa Berprestasi</span>
-                <div class="w-8 h-8 rounded-xl bg-lime-100 text-lime-800 flex items-center justify-center">
-                  <i data-lucide="users" class="w-4 h-4"></i>
-                </div>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span id="metricSiswaUnik" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[11px] font-semibold text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">Siswa</span>
-              </div>
-              <p class="text-[11px] text-gray-400 mt-2">Siswa memiliki perolehan</p>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-gray-500">Ajang / Kejuaraan</span>
-                <div class="w-8 h-8 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
-                  <i data-lucide="medal" class="w-4 h-4"></i>
-                </div>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span id="metricLombaUnik" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[11px] text-gray-500">Ajang</span>
-              </div>
-              <p class="text-[11px] text-gray-400 mt-2">Event perlombaan terdaftar</p>
-            </div>
-
-            <div class="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-semibold text-gray-500">Capaian Bulan Ini</span>
-                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                  <i data-lucide="calendar" class="w-4 h-4"></i>
-                </div>
-              </div>
-              <div class="flex items-baseline justify-between">
-                <span id="metricBulanIni" class="text-2xl sm:text-3xl font-bold text-gray-900">0</span>
-                <span class="text-[11px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">Baru</span>
-              </div>
-              <p class="text-[11px] text-gray-400 mt-2">Diinput bulan berjalan</p>
-            </div>
-          </div>
-
-          <!-- RECENT ACTIVITY SECTION -->
-          <div class="bg-white rounded-2xl border border-gray-200/80 p-5 shadow-sm flex flex-col">
-            <div class="flex items-center justify-between mb-4">
-              <div>
-                <h3 class="font-bold text-gray-900 text-sm sm:text-base">Prestasi Terbaru</h3>
-                <p class="text-xs text-gray-500">Siswa yang baru diinput</p>
-              </div>
-              <button onclick="switchTab('data')" class="text-xs font-bold text-violet-700 hover:text-violet-800">Lihat Semua</button>
-            </div>
-            <div id="recentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-              <!-- Dynamic Items -->
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION: DATA PRESTASI VIEW -->
-        <div id="view-data" class="hidden space-y-4">
-          <!-- Filter Bar -->
-          <div class="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="flex items-center gap-2 w-full sm:w-auto flex-1">
-              <div class="relative flex-1 sm:w-80">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input type="text" id="filterSearch" onkeyup="applyFilters()" placeholder="Cari NIS, Nama, Lomba, Kategori..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20">
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs rounded-xl shadow-sm flex items-center gap-1.5">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                <span>Tambah Data</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Table Container -->
-          <div class="bg-white rounded-2xl border border-gray-200/80 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-gray-50/80 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th class="py-3.5 px-4">Foto</th>
-                    <th class="py-3.5 px-4">NIS & Siswa</th>
-                    <th class="py-3.5 px-4">Pencapaian</th>
-                    <th class="py-3.5 px-4">Kategori & Lomba</th>
-                    <th class="py-3.5 px-4">Penyelenggara</th>
-                    <th class="py-3.5 px-4">Tanggal & Tempat</th>
-                    <th class="py-3.5 px-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="prestasiTableBody" class="divide-y divide-gray-100 text-xs">
-                  <!-- Dynamic rows -->
-                </tbody>
-              </table>
-            </div>
-            
-            <!-- Empty State -->
-            <div id="tableEmptyState" class="hidden py-12 text-center">
-              <i data-lucide="inbox" class="w-12 h-12 text-gray-300 mx-auto mb-2"></i>
-              <p class="text-sm font-bold text-gray-700">Data Prestasi Tidak Ditemukan</p>
-              <p class="text-xs text-gray-400 mt-1">Coba sesuaikan kata kunci pencarian Anda.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECTION: SETTINGS VIEW -->
-        <div id="view-settings" class="hidden space-y-6 max-w-2xl">
-          <div class="bg-white rounded-2xl border border-gray-200/80 p-6 shadow-sm space-y-5">
-            <div>
-              <h3 class="text-base font-bold text-gray-900">Koneksi Database & Cloud Storage</h3>
-              <p class="text-xs text-gray-500">Konfigurasi URL Google Sheets dan Cloudinary CDN untuk Penyimpanan Foto / Sertifikat.</p>
-            </div>
-            
-            <div class="space-y-4">
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">1. URL / ID Spreadsheet Data Prestasi</label>
-                <input type="text" id="settingSheetPrestasi" value="https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                <p class="text-[11px] text-gray-400 mt-1">Situs utama penyimpanan data pencatatan prestasi siswa.</p>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">2. URL / ID Spreadsheet Database Siswa (Primary Key: NIS/NIPD)</label>
-                <input type="text" id="settingSheetSiswa" value="https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit" placeholder="Masukkan URL / ID Sheet Database Siswa..." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                <p class="text-[11px] text-violet-700 font-medium mt-1">Digunakan untuk penarikan otomatis Nama Siswa & Kelas berdasarkan kunci Kolom A (NIS/NIPD).</p>
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">2b. Nama Tab "Riwayat Kelas" (di spreadsheet yang sama)</label>
-                <input type="text" id="settingTabRiwayatKelas" value="Riwayat Kelas" placeholder="Contoh: Riwayat Kelas" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                <p class="text-[11px] text-gray-400 mt-1">Kolom yang dibaca: Tahun Pelajaran, NIS, Kelas. Kelas terbaru per NIS akan digabung ke data siswa.</p>
-              </div>
-
-              <div class="pt-3 border-t border-gray-100">
-                <p class="text-xs font-bold text-gray-700 mb-2">2c. Nama Kolom Persis (Exact Match)</p>
-                <p class="text-[11px] text-gray-400 mb-3">Tulis judul kolom PERSIS seperti di baris header sheet Anda (tidak case-sensitive). Tidak ada lagi tebak-tebakan berdasarkan kata kunci.</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom NIS/NIPD (tab Database Siswa)</label>
-                    <input type="text" id="settingKolomNisUtama" value="NIS/NIPD" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Nama (tab Database Siswa)</label>
-                    <input type="text" id="settingKolomNamaUtama" value="Nama Lengkap" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Tahun Pelajaran (tab Riwayat Kelas)</label>
-                    <input type="text" id="settingKolomTahunRiwayat" value="Tahun Pelajaran" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom NIS (tab Riwayat Kelas)</label>
-                    <input type="text" id="settingKolomNisRiwayat" value="NIS" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  </div>
-                  <div>
-                    <label class="block text-[11px] font-semibold text-gray-600 mb-1">Kolom Kelas (tab Riwayat Kelas)</label>
-                    <input type="text" id="settingKolomKelasRiwayat" value="Kelas" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  </div>
-                </div>
-              </div>
-
-              <!-- CLOUDINARY CONFIGURATION FIELDS -->
-              <div class="pt-3 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs font-semibold text-gray-700 mb-1">3. Cloudinary Cloud Name</label>
-                  <input type="text" id="settingCloudinaryName" placeholder="Contoh: dxy123abc" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  <p class="text-[11px] text-gray-400 mt-1">Nama Cloud akun Cloudinary Anda.</p>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-semibold text-gray-700 mb-1">4. Cloudinary Upload Preset (Unsigned)</label>
-                  <input type="text" id="settingCloudinaryPreset" placeholder="Contoh: prestunas_preset" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-800 text-xs font-mono focus:outline-none focus:bg-white focus:border-violet-500">
-                  <p class="text-[11px] text-gray-400 mt-1">Unsigned Preset untuk upload langsung dari browser.</p>
-                </div>
-              </div>
-
-              <div class="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl text-xs text-emerald-800 font-medium flex items-center gap-2">
-                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0"></i>
-                <span id="statusSyncSiswaText">Status Relasi: Google Sheets & Cloudinary Storage Siap Terhubung.</span>
-              </div>
-            </div>
-
-            <div class="pt-4 border-t border-gray-100 flex items-center gap-3">
-              <button onclick="simpanPengaturan()" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                Simpan Pengaturan
-              </button>
-              <button onclick="fetchMasterSiswaFromSheet()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold rounded-xl text-xs shadow-sm">
-                Sync Data Siswa
-              </button>
-            </div>
-          </div>
-        </div>
-
-      </main>
-
-      <!-- MOBILE BOTTOM NAVIGATION -->
-      <nav class="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-gray-200 px-3 py-2 flex items-center justify-around shadow-lg">
-        <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1 text-violet-600">
-          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-          <span class="text-[10px] font-semibold">Beranda</span>
-        </button>
-        <button onclick="switchTab('data')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600">
-          <i data-lucide="award" class="w-5 h-5"></i>
-          <span class="text-[10px] font-medium">Prestasi</span>
-        </button>
-        <button onclick="openModalTambah()" class="w-11 h-11 rounded-full bg-lime-500 text-gray-900 flex items-center justify-center -mt-5 shadow-lg shadow-lime-300 border-2 border-white">
-          <i data-lucide="plus" class="w-6 h-6"></i>
-        </button>
-        <button onclick="switchTab('settings')" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-600">
-          <i data-lucide="settings" class="w-5 h-5"></i>
-          <span class="text-[10px] font-medium">Setelan</span>
-        </button>
-      </nav>
-
+<!-- SIDEBAR -->
+<aside class="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 z-30 bg-white border-r border-gray-200">
+  <div class="flex flex-col flex-grow pt-5 overflow-y-auto">
+    <div class="flex items-center gap-3 px-6 pb-6 border-b border-gray-100">
+      <div class="w-10 h-10 bg-violet-600 flex-shrink-0" style="-webkit-mask:url('https://i.imgur.com/5T1LlRI.png') no-repeat center/contain;mask:url('https://i.imgur.com/5T1LlRI.png') no-repeat center/contain"></div>
+      <div><h1 class="font-bold text-base leading-tight">PresTunas</h1><p class="text-xs text-gray-500 font-medium">Data Prestasi Siswa</p></div>
     </div>
-  </div>
-
-  <!-- ==================== MODAL FORM INPUT PRESTASI ==================== -->
-  <div id="modalTambah" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeModalTambah()"></div>
-
-    <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-      <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl border border-gray-100">
-        
-        <div class="bg-violet-50/70 px-6 py-4 border-b border-violet-100 flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center">
-              <i data-lucide="award" class="w-4 h-4"></i>
-            </div>
-            <h3 class="text-base font-bold text-gray-900" id="modal-title">Pencatatan Prestasi Siswa</h3>
-          </div>
-          <button onclick="closeModalTambah()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg">
-            <i data-lucide="x" class="w-5 h-5"></i>
-          </button>
-        </div>
-
-        <form id="formPrestasi" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
-          
-          <!-- NIS RELASI & AUTOCOMPLETE -->
-          <div class="p-3.5 bg-violet-50/60 rounded-xl border border-violet-100 space-y-2 relative">
-            <label class="block text-xs font-bold text-violet-950">NIS/NIPD / Nama Siswa (Master DB Link)</label>
-            <div class="relative">
-              <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-violet-400"></i>
-              <input type="text" id="inputNISQuery" onkeyup="handleNISAutocomplete(event)" required placeholder="Ketik NIS/NIPD (cth: 212206012) atau Nama..." class="w-full pl-9 pr-3.5 py-2.5 bg-white border border-violet-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20">
-            </div>
-
-            <!-- Autocomplete Suggestion Box -->
-            <div id="nisSuggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-40 overflow-y-auto divide-y divide-gray-100"></div>
-
-            <input type="hidden" id="selectedNIS" required>
-            <input type="hidden" id="selectedNamaSiswa" required>
-
-            <div id="selectedSiswaBadge" class="hidden items-center justify-between p-2.5 bg-white border border-violet-200 rounded-lg text-xs">
-              <div>
-                <span class="font-bold text-gray-900" id="badgeNamaSiswa">-</span>
-                <span class="text-gray-500 ml-2" id="badgeNISSiswa">NIS/NIPD: -</span>
-              </div>
-              <span class="px-2 py-0.5 bg-violet-100 text-violet-700 font-semibold rounded-full text-[10px]" id="badgeKelasSiswa">-</span>
-            </div>
-          </div>
-
-          <!-- PENCAPAIAN & KATEGORI -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Pencapaian / Prestasi</label>
-              <select id="inputPencapaian" onchange="togglePencapaianLainnya(this.value)" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-                <option value="">Pilih Pencapaian</option>
-                <option>Juara 1</option>
-                <option>Juara 2</option>
-                <option>Juara 3</option>
-                <option>Gold Award</option>
-                <option>Silver Award</option>
-                <option>Bronze Award</option>
-                <option>Harapan 1</option>
-                <option>Harapan 2</option>
-                <option>Peserta Terbaik</option>
-                <option value="Lainnya">Lainnya...</option>
-              </select>
-              <input type="text" id="inputPencapaianLainnya" placeholder="Ketik pencapaian manual..." class="hidden mt-2 w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Kategori</label>
-              <input type="text" id="inputKategori" required placeholder="Contoh: 25 M Bebas Fins 2 SD putra, Paduan Suara, dll." class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Nama Lomba / Kejuaraan</label>
-            <input type="text" id="inputNamaLomba" required placeholder="Contoh: Olimpiade Sains Nasional (OSN) 2026" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Penyelenggara</label>
-              <input type="text" id="inputPenyelenggara" required placeholder="Contoh: Kementerian Pendidikan" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-gray-700 mb-1">Tanggal</label>
-              <input type="date" id="inputTanggal" required class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Tempat / Lokasi</label>
-            <input type="text" id="inputTempat" required placeholder="Contoh: Balai Kota Depok / Online" class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900 text-sm focus:outline-none focus:bg-white focus:border-violet-500">
-          </div>
-
-          <!-- UPLOAD FOTO / SERTIFIKAT -->
-          <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Foto Bukti / Sertifikat (Auto Cloudinary CDN)</label>
-            <div onclick="document.getElementById('fileInput').click()" class="border-2 border-dashed border-gray-200 hover:border-violet-400 rounded-xl p-4 text-center cursor-pointer bg-gray-50 hover:bg-violet-50/30 transition-all">
-              <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto text-gray-400 mb-1"></i>
-              <p class="text-xs font-semibold text-gray-700">Pilih Foto atau Sertifikat</p>
-              <p id="fileNamePreview" class="text-[10px] text-gray-400 mt-0.5">JPG, PNG (Format Gambar)</p>
-              <input type="file" id="fileInput" onchange="handleFileSelect(event)" accept="image/*" class="hidden">
-            </div>
-          </div>
-
-          <div class="pt-3 flex items-center justify-end gap-3 border-t border-gray-100">
-            <button type="button" onclick="closeModalTambah()" class="px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold text-xs rounded-xl">Batal</button>
-            <button type="submit" class="px-5 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-xs rounded-xl shadow-sm flex items-center gap-2">
-              <i data-lucide="save" class="w-4 h-4"></i>
-              Simpan ke Spreadsheet
-            </button>
-          </div>
-
-        </form>
+    <div id="syncBox" class="mx-4 my-4 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2.5">
+      <span id="syncDot" class="h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+      <div class="min-w-0"><p id="syncTitle" class="text-xs font-semibold truncate">Belum Terhubung</p><p id="syncSub" class="text-[11px] text-gray-500 truncate">Isi Pengaturan</p></div>
+    </div>
+    <nav class="flex-1 px-4 space-y-1.5">
+      <button data-nav="dashboard" onclick="switchTab('dashboard')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="layout-dashboard" class="w-5 h-5"></i>Dashboard</button>
+      <button data-nav="data" onclick="switchTab('data')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="award" class="w-5 h-5"></i>Data Prestasi</button>
+      <button onclick="openModalTambah()" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-violet-50"><i data-lucide="plus-circle" class="w-5 h-5"></i>Tambah Data</button>
+      <button data-nav="settings" onclick="switchTab('settings')" class="navbtn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm"><i data-lucide="settings" class="w-5 h-5"></i>Pengaturan</button>
+    </nav>
+    <div class="p-4 border-t border-gray-100">
+      <div class="flex items-center gap-3 p-2 rounded-xl bg-violet-50/50">
+        <div class="w-9 h-9 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-xs">LK</div>
+        <div class="min-w-0"><p class="text-xs font-semibold truncate">Lukas Koesumah</p><p class="text-[11px] text-gray-500 truncate">Guru / Admin Sekolah</p></div>
       </div>
     </div>
   </div>
+</aside>
 
-  <!-- MODAL DETAIL PRESTASI -->
-  <div id="modalDetail" class="fixed inset-0 z-50 hidden overflow-y-auto">
-    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModalDetail()"></div>
-    <div class="flex min-h-full items-center justify-center p-4">
-      <div class="relative bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-gray-100">
-        <div class="flex justify-between items-start border-b border-gray-100 pb-3">
-          <div>
-            <span id="detailBadge" class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-xs rounded-full inline-block mb-1">Pencapaian</span>
-            <h3 id="detailNamaLomba" class="font-bold text-gray-900 text-base leading-tight">-</h3>
-          </div>
-          <button onclick="closeModalDetail()" class="text-gray-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+<div class="flex-1 md:pl-64 flex flex-col min-h-screen">
+  <header class="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3 md:hidden"><span class="font-bold text-base">PresTunas</span></div>
+    <div class="hidden md:block"><h2 id="pageTitle" class="text-lg font-bold">Dashboard</h2><p id="pageSub" class="text-xs text-gray-500"></p></div>
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="relative hidden sm:block">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input id="globalSearch" onkeyup="if(event.key==='Enter'){switchTab('data');$('filterSearch').value=this.value;renderTable()}" placeholder="Cari lalu Enter..." class="pl-9 pr-4 py-2 bg-gray-100 rounded-xl text-xs w-56 focus:outline-none focus:ring-2 focus:ring-violet-500/20">
+      </div>
+      <button onclick="loadPrestasi(true)" title="Muat ulang dari sheet" class="p-2 rounded-xl bg-gray-100 hover:bg-gray-200"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+      <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 font-bold text-xs sm:text-sm rounded-xl flex items-center gap-1.5"><i data-lucide="plus" class="w-4 h-4"></i>Tambah Prestasi</button>
+    </div>
+  </header>
+
+  <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 pb-24 md:pb-8">
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="space-y-6">
+      <div class="bg-gradient-to-r from-violet-900 via-violet-800 to-slate-900 rounded-2xl p-6 text-white">
+        <span class="px-2.5 py-1 bg-white/10 text-violet-200 text-xs font-semibold rounded-full inline-block mb-3">Tahun Ajaran 2026/2027</span>
+        <h2 class="text-xl sm:text-2xl font-bold mb-2">Portal Data Prestasi Siswa</h2>
+        <p class="text-violet-200 text-xs sm:text-sm mb-4">Data tersimpan di Google Sheets dan terhubung ke Database Siswa via NIS.</p>
+        <button onclick="openModalTambah()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 text-gray-900 font-bold text-sm rounded-xl">Input Prestasi Baru</button>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl border border-gray-200 p-5"><p class="text-xs font-semibold text-gray-500">Total Prestasi</p><p id="mTotal" class="text-3xl font-bold mt-1">0</p></div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-5"><p class="text-xs font-semibold text-gray-500">Siswa Berprestasi</p><p id="mSiswa" class="text-3xl font-bold mt-1">0</p></div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-5"><p class="text-xs font-semibold text-gray-500">Ajang / Kejuaraan</p><p id="mLomba" class="text-3xl font-bold mt-1">0</p></div>
+        <div class="bg-white rounded-2xl border border-gray-200 p-5"><p class="text-xs font-semibold text-gray-500">Capaian Bulan Ini</p><p id="mBulan" class="text-3xl font-bold mt-1">0</p></div>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-200 p-5">
+        <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-sm sm:text-base">Prestasi Terbaru</h3><button onclick="switchTab('data')" class="text-xs font-bold text-violet-700">Lihat Semua</button></div>
+        <div id="recentList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5"></div>
+      </div>
+    </div>
+
+    <!-- DATA -->
+    <div id="view-data" class="hidden space-y-4">
+      <div class="bg-white rounded-2xl border border-gray-200 p-4 flex items-center justify-between gap-3">
+        <div class="relative flex-1 sm:max-w-sm">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          <input id="filterSearch" oninput="renderTable()" placeholder="Cari NIS, nama, lomba, kategori..." class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-violet-500">
+        </div>
+        <button onclick="openModalTambah()" class="px-3.5 py-2 bg-lime-500 hover:bg-lime-600 font-bold text-xs rounded-xl">Tambah Data</button>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead><tr class="bg-gray-50 border-b text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+              <th class="py-3.5 px-4">Foto</th><th class="py-3.5 px-4">Siswa</th><th class="py-3.5 px-4">Pencapaian</th><th class="py-3.5 px-4">Lomba</th><th class="py-3.5 px-4">Penyelenggara</th><th class="py-3.5 px-4">Tanggal</th><th class="py-3.5 px-4 text-center">Aksi</th>
+            </tr></thead>
+            <tbody id="tbody" class="divide-y divide-gray-100 text-xs"></tbody>
+          </table>
+        </div>
+        <div id="emptyState" class="hidden py-12 text-center text-sm text-gray-500">Data prestasi tidak ditemukan.</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="view-settings" class="hidden max-w-2xl">
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
+        <div><h3 class="text-base font-bold">Pengaturan Koneksi</h3><p class="text-xs text-gray-500">Disimpan di browser ini (localStorage).</p></div>
+
+        <div class="space-y-3 p-4 bg-violet-50/60 border border-violet-100 rounded-xl">
+          <p class="text-xs font-bold text-violet-900">Penyimpanan Prestasi (Apps Script)</p>
+          <div><label class="block text-[11px] font-semibold mb-1">URL Web App (/exec)</label><input id="sScriptUrl" class="fld" placeholder="https://script.google.com/macros/s/.../exec"></div>
+          <div><label class="block text-[11px] font-semibold mb-1">Token (sama dengan TOKEN di Code.gs)</label><input id="sToken" class="fld" type="password"></div>
         </div>
 
-        <div class="space-y-3 text-xs">
-          <div class="p-3 bg-gray-50 rounded-xl space-y-1">
-            <p class="font-bold text-gray-900 text-sm" id="detailNamaSiswa">-</p>
-            <p class="text-gray-500" id="detailNIS">-</p>
+        <div class="space-y-3">
+          <div><label class="block text-xs font-semibold mb-1">URL / ID Spreadsheet Database Siswa</label><input id="sSheetSiswa" class="fld"><p class="text-[11px] text-gray-400 mt-1">Sheet harus dibagikan "Anyone with the link can view".</p></div>
+          <div><label class="block text-xs font-semibold mb-1">Nama Tab Riwayat Kelas</label><input id="sTabRiwayat" class="fld"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+            <div><label class="block text-[11px] font-semibold mb-1">Kolom NIS (Database Siswa)</label><input id="sKolNisU" class="fld"></div>
+            <div><label class="block text-[11px] font-semibold mb-1">Kolom Nama (Database Siswa)</label><input id="sKolNamaU" class="fld"></div>
+            <div><label class="block text-[11px] font-semibold mb-1">Kolom Tahun (Riwayat Kelas)</label><input id="sKolTahunR" class="fld"></div>
+            <div><label class="block text-[11px] font-semibold mb-1">Kolom NIS (Riwayat Kelas)</label><input id="sKolNisR" class="fld"></div>
+            <div><label class="block text-[11px] font-semibold mb-1">Kolom Kelas (Riwayat Kelas)</label><input id="sKolKelasR" class="fld"></div>
           </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+            <div><label class="block text-xs font-semibold mb-1">Cloudinary Cloud Name</label><input id="sCloudName" class="fld"></div>
+            <div><label class="block text-xs font-semibold mb-1">Cloudinary Upload Preset (Unsigned)</label><input id="sCloudPreset" class="fld"></div>
+          </div>
+        </div>
 
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <span class="text-gray-400 block text-[10px]">KATEGORI</span>
-              <span id="detailKategori" class="font-semibold text-gray-800">-</span>
-            </div>
-            <div>
-              <span class="text-gray-400 block text-[10px]">PENYELENGGARA</span>
-              <span id="detailPenyelenggara" class="font-semibold text-gray-800">-</span>
-            </div>
-            <div>
-              <span class="text-gray-400 block text-[10px]">TANGGAL</span>
-              <span id="detailTanggal" class="font-semibold text-gray-800">-</span>
-            </div>
-            <div>
-              <span class="text-gray-400 block text-[10px]">TEMPAT</span>
-              <span id="detailTempat" class="font-semibold text-gray-800">-</span>
-            </div>
-          </div>
-
-          <div>
-            <span class="text-gray-400 block text-[10px] mb-1">FOTO BUKTI / SERTIFIKAT</span>
-            <img id="detailFoto" src="" alt="Bukti" class="w-full h-48 object-cover rounded-xl border border-gray-200">
-          </div>
+        <div id="statusSiswa" class="p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium">Status siswa: belum dimuat.</div>
+        <div class="pt-4 border-t border-gray-100 flex gap-3">
+          <button onclick="saveSettings()" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-semibold">Simpan & Muat Ulang</button>
+          <button onclick="fetchSiswa()" class="px-4 py-2.5 bg-lime-500 hover:bg-lime-600 font-bold rounded-xl text-xs">Sync Data Siswa</button>
         </div>
       </div>
     </div>
+  </main>
+
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 border-t border-gray-200 px-3 py-2 flex items-center justify-around">
+    <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1 text-violet-600"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span class="text-[10px] font-semibold">Beranda</span></button>
+    <button onclick="switchTab('data')" class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="award" class="w-5 h-5"></i><span class="text-[10px]">Prestasi</span></button>
+    <button onclick="openModalTambah()" class="w-11 h-11 rounded-full bg-lime-500 flex items-center justify-center -mt-5 shadow-lg border-2 border-white"><i data-lucide="plus" class="w-6 h-6"></i></button>
+    <button onclick="switchTab('settings')" class="flex flex-col items-center gap-1 text-gray-500"><i data-lucide="settings" class="w-5 h-5"></i><span class="text-[10px]">Setelan</span></button>
+  </nav>
+</div>
+</div>
+
+<!-- MODAL TAMBAH -->
+<div id="modalTambah" class="fixed inset-0 z-50 hidden overflow-y-auto">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModalTambah()"></div>
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div class="relative bg-white rounded-2xl w-full max-w-xl shadow-xl border border-gray-100 overflow-hidden">
+      <div class="bg-violet-50/70 px-6 py-4 border-b border-violet-100 flex items-center justify-between">
+        <h3 class="text-base font-bold">Pencatatan Prestasi Siswa</h3>
+        <button onclick="closeModalTambah()" class="text-gray-400 p-1"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="formPrestasi" onsubmit="handleSubmit(event)" class="p-6 space-y-4">
+        <div class="p-3.5 bg-violet-50/60 rounded-xl border border-violet-100 space-y-2 relative">
+          <label class="block text-xs font-bold text-violet-950">NIS / Nama Siswa</label>
+          <input id="inputNISQuery" autocomplete="off" oninput="autocompleteSiswa()" placeholder="Ketik NIS atau nama..." class="w-full px-3.5 py-2.5 bg-white border border-violet-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/20">
+          <div id="nisSuggestions" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto divide-y divide-gray-100"></div>
+          <input type="hidden" id="selectedNIS"><input type="hidden" id="selectedNama">
+          <div id="siswaBadge" class="hidden items-center justify-between p-2.5 bg-white border border-violet-200 rounded-lg text-xs"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold mb-1">Pencapaian</label>
+            <select id="inputPencapaian" onchange="toggleLain(this.value)" required class="fld">
+              <option value="">Pilih Pencapaian</option>
+              <option>Juara 1</option><option>Juara 2</option><option>Juara 3</option>
+              <option>Gold Award</option><option>Silver Award</option><option>Bronze Award</option>
+              <option>Harapan 1</option><option>Harapan 2</option><option>Peserta Terbaik</option>
+              <option value="Lainnya">Lainnya...</option>
+            </select>
+            <input id="inputLain" placeholder="Ketik pencapaian..." class="fld hidden mt-2">
+          </div>
+          <div><label class="block text-xs font-semibold mb-1">Kategori</label><input id="inputKategori" required placeholder="Cth: 25 M Bebas Fins 2 SD putra" class="fld"></div>
+        </div>
+        <div><label class="block text-xs font-semibold mb-1">Nama Lomba / Kejuaraan</label><input id="inputLomba" required class="fld"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label class="block text-xs font-semibold mb-1">Penyelenggara</label><input id="inputPenyelenggara" required class="fld"></div>
+          <div><label class="block text-xs font-semibold mb-1">Tanggal</label><input type="date" id="inputTanggal" required class="fld"></div>
+        </div>
+        <div><label class="block text-xs font-semibold mb-1">Tempat / Lokasi</label><input id="inputTempat" required class="fld"></div>
+        <div>
+          <label class="block text-xs font-semibold mb-1">Foto Bukti / Sertifikat (opsional, via Cloudinary)</label>
+          <input type="file" id="fileInput" accept="image/*" class="block w-full text-xs text-gray-600 file:mr-3 file:px-3 file:py-2 file:rounded-lg file:border-0 file:bg-violet-100 file:text-violet-700 file:font-semibold">
+        </div>
+        <div class="pt-3 flex justify-end gap-3 border-t border-gray-100">
+          <button type="button" onclick="closeModalTambah()" class="px-4 py-2.5 bg-white border border-gray-200 font-semibold text-xs rounded-xl">Batal</button>
+          <button id="btnSimpan" type="submit" class="px-5 py-2.5 bg-lime-500 hover:bg-lime-600 font-bold text-xs rounded-xl disabled:opacity-50">Simpan ke Spreadsheet</button>
+        </div>
+      </form>
+    </div>
   </div>
+</div>
 
-  <div id="toastHolder" class="fixed bottom-20 md:bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+<!-- MODAL DETAIL -->
+<div id="modalDetail" class="fixed inset-0 z-50 hidden overflow-y-auto">
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="$('modalDetail').classList.add('hidden')"></div>
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div id="detailBody" class="relative bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-xl"></div>
+  </div>
+</div>
 
-  <script>
-    let masterSiswa = [
-      { nis: '212206012', nama: 'Keano Gabriel', kelas: '5A' },
-      { nis: '212206015', nama: 'Azahra Nayla', kelas: '5B' },
-      { nis: '212206028', nama: 'Raffi Ahmad', kelas: '6A' },
-      { nis: '212206031', nama: 'Siti Aminah', kelas: '4A' },
-      { nis: '212206045', nama: 'Budi Santoso', kelas: '6B' }
-    ];
+<div id="toastHolder" class="fixed bottom-20 md:bottom-6 right-6 z-[60] flex flex-col gap-2"></div>
 
-    let dataPrestasi = [
-      {
-        id: '1',
-        nis: '212206012',
-        namaSiswa: 'Keano Gabriel',
-        pencapaian: 'Gold Award',
-        kategori: '25 M Bebas Fins 2 SD putra',
-        namaLomba: 'Kejuaraan Renang Antar Pelajar Se-Jawa Barat',
-        penyelenggara: 'PRSI Jawa Barat',
-        tanggal: '2026-09-20',
-        tempat: 'Kolam Renang GOR Wiladatika',
-        foto: 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80'
-      },
-      {
-        id: '2',
-        nis: '212206015',
-        namaSiswa: 'Azahra Nayla',
-        pencapaian: 'Juara 1',
-        kategori: 'Paduan Suara kelas 3-6 SD',
-        namaLomba: 'Festival & Lomba Seni Siswa Nasional (FLS2N)',
-        penyelenggara: 'Dinas Pendidikan Depok',
-        tanggal: '2026-09-18',
-        tempat: 'Balai Kota Depok',
-        foto: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=600&q=80'
-      },
-      {
-        id: '3',
-        nis: '212206028',
-        namaSiswa: 'Raffi Ahmad',
-        pencapaian: 'Division Cup Winner U10',
-        kategori: 'Kategori A dalam semifinal wilayah Bekasi',
-        namaLomba: 'Junior Football Tournament 2026',
-        penyelenggara: 'PSSI Regional',
-        tanggal: '2026-09-12',
-        tempat: 'Stadion Patriot Candrabhaga',
-        foto: 'https://images.unsplash.com/photo-1517649763962-0c623266010b?auto=format&fit=crop&w=600&q=80'
-      }
-    ];
+<style>
+  .fld{width:100%;padding:.6rem .85rem;background:#f9fafb;border:1px solid #e5e7eb;border-radius:.6rem;font-size:.8rem}
+  .fld:focus{outline:none;background:#fff;border-color:#8b5cf6}
+  .navbtn{color:#4b5563;font-weight:500}.navbtn:hover{background:#f5f3ff}
+  .navbtn.active{background:#f5f3ff;color:#6d28d9;font-weight:600}
+</style>
 
-    let sheetSiswaUrl = "https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit";
-    let tabRiwayatKelas = "Riwayat Kelas";
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-    // Nama kolom di-COCOKKAN PERSIS (exact match, tidak peduli besar-kecil huruf
-    // & spasi di ujung) sesuai judul asli di sheet -- bukan ditebak dari kata
-    // kunci lagi. Ini defaultnya sesuai header yang sudah dikonfirmasi; bisa
-    // diubah lewat form di tab Pengaturan kalau sheet Anda berubah.
-    let kolomNisUtama = 'NIS/NIPD';       // tab Database Siswa
-    let kolomNamaUtama = 'Nama Lengkap';  // tab Database Siswa
-    let kolomTahunRiwayat = 'Tahun Pelajaran'; // tab Riwayat Kelas
-    let kolomNisRiwayat = 'NIS';               // tab Riwayat Kelas
-    let kolomKelasRiwayat = 'Kelas';           // tab Riwayat Kelas
+// ---------- SETTINGS ----------
+const DEFAULTS = {
+  scriptUrl: '', token: '',
+  sheetSiswa: 'https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit',
+  tabRiwayat: 'Riwayat Kelas',
+  kolNisU: 'NIS/NIPD', kolNamaU: 'Nama Lengkap',
+  kolTahunR: 'Tahun Pelajaran', kolNisR: 'NIS', kolKelasR: 'Kelas',
+  cloudName: '', cloudPreset: ''
+};
+const FIELD_IDS = { scriptUrl:'sScriptUrl', token:'sToken', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
+let S = { ...DEFAULTS };
+try { S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('prestunas_settings') || '{}') }; } catch (e) {}
 
-    let currentFotoBase64 = 'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?auto=format&fit=crop&w=600&q=80';
+function fillSettingsForm() { Object.entries(FIELD_IDS).forEach(([k, id]) => $(id).value = S[k] || ''); }
+function saveSettings() {
+  Object.entries(FIELD_IDS).forEach(([k, id]) => { S[k] = $(id).value.trim(); });
+  try { localStorage.setItem('prestunas_settings', JSON.stringify(S)); } catch (e) {}
+  toast('Pengaturan disimpan', 'success');
+  fetchSiswa(); loadPrestasi();
+}
 
-    window.onload = function() {
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-      renderDashboard();
-      renderTableData(dataPrestasi);
-      fetchMasterSiswaFromSheet();
+// ---------- STATE ----------
+let masterSiswa = [];
+let dataPrestasi = [];
+let fotoUrl = '';
+
+function setSync(state, sub) {
+  const c = { ok:['bg-emerald-500','Database Terhubung'], err:['bg-red-500','Gagal Terhubung'], off:['bg-gray-400','Belum Terhubung'], load:['bg-amber-400','Memuat...'] }[state];
+  $('syncDot').className = 'h-2.5 w-2.5 rounded-full ' + c[0];
+  $('syncTitle').textContent = c[1];
+  $('syncSub').textContent = sub || '';
+}
+
+// ---------- APPS SCRIPT API ----------
+async function apiPost(payload) {
+  if (!S.scriptUrl) throw new Error('URL Apps Script belum diisi di Pengaturan');
+  // text/plain menghindari preflight CORS (tidak didukung Apps Script)
+  const res = await fetch(S.scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...payload, token: S.token }) });
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || 'Gagal');
+  return json;
+}
+async function loadPrestasi(manual) {
+  if (!S.scriptUrl) { setSync('off', 'Isi URL Apps Script'); renderAll(); return; }
+  setSync('load');
+  try {
+    const res = await fetch(`${S.scriptUrl}?action=list&token=${encodeURIComponent(S.token)}`);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error);
+    dataPrestasi = json.data.sort((a, b) => Number(b.createdAt || b.id) - Number(a.createdAt || a.id));
+    setSync('ok', `${dataPrestasi.length} data prestasi`);
+    if (manual) toast('Data dimuat ulang dari sheet', 'success');
+  } catch (err) {
+    console.error(err);
+    setSync('err', 'Cek URL / token');
+    toast('Gagal memuat prestasi: ' + err.message, 'error');
+  }
+  renderAll();
+}
+
+// ---------- DATABASE SISWA ----------
+const idxPersis = (cols, judul) => { const t = (judul || '').toLowerCase().trim(); const i = cols.findIndex(c => (c.label || '').toLowerCase().trim() === t); return i === -1 ? null : i; };
+const sheetId = u => { const m = u.match(/\/d\/([a-zA-Z0-9-_]+)/); return m ? m[1] : u; };
+
+async function gviz(id, tab) {
+  const url = `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:json${tab ? '&sheet=' + encodeURIComponent(tab) : ''}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Gagal mengakses sheet');
+  const txt = await res.text();
+  const data = JSON.parse(txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1));
+  if (!data.table) throw new Error('Tabel tidak ditemukan');
+  return data.table;
+}
+async function fetchKelasMap(id) {
+  const map = new Map();
+  try {
+    const t = await gviz(id, S.tabRiwayat);
+    const ni = idxPersis(t.cols, S.kolNisR), ki = idxPersis(t.cols, S.kolKelasR), ti = idxPersis(t.cols, S.kolTahunR);
+    if (ni === null || ki === null) return map;
+    (t.rows || []).forEach(r => {
+      if (!r.c) return;
+      const nis = r.c[ni]?.v != null ? String(r.c[ni].v).trim() : '';
+      const kelas = r.c[ki]?.v != null ? String(r.c[ki].v).trim() : '';
+      const tahun = ti != null && r.c[ti]?.v != null ? String(r.c[ti].v).trim() : '';
+      if (!nis || !kelas) return;
+      const ex = map.get(nis);
+      if (!ex || (tahun && (!ex.tahun || tahun >= ex.tahun)) || (!tahun && !ex.tahun)) map.set(nis, { kelas, tahun });
+    });
+  } catch (e) { console.warn('Riwayat Kelas gagal dimuat', e); }
+  return map;
+}
+async function fetchSiswa() {
+  if (!S.sheetSiswa) return;
+  try {
+    const id = sheetId(S.sheetSiswa);
+    const t = await gviz(id);
+    const ni = idxPersis(t.cols, S.kolNisU) ?? 0, na = idxPersis(t.cols, S.kolNamaU) ?? 1;
+    const kelasMap = await fetchKelasMap(id);
+    const list = []; let skipped = 0;
+    (t.rows || []).forEach(r => {
+      if (!r.c) { skipped++; return; }
+      const nis = r.c[ni]?.v != null ? String(r.c[ni].v).trim() : '';
+      const nama = r.c[na]?.v != null ? String(r.c[na].v).trim() : '';
+      if (!nis || !nama) { skipped++; return; }
+      list.push({ nis, nama, kelas: kelasMap.get(nis)?.kelas || '-' });
+    });
+    if (list.length) {
+      masterSiswa = list;
+      $('statusSiswa').textContent = `Status siswa: ${list.length} siswa dimuat, ${list.filter(s => s.kelas !== '-').length} dengan kelas${skipped ? `, ${skipped} baris terlewat` : ''}.`;
+      toast(`${list.length} data siswa dimuat`, 'success');
+    }
+  } catch (err) {
+    console.warn(err);
+    $('statusSiswa').textContent = 'Status siswa: gagal memuat (pastikan sheet dibagikan publik).';
+  }
+}
+
+// ---------- AUTOCOMPLETE ----------
+function autocompleteSiswa() {
+  const q = $('inputNISQuery').value.toLowerCase().trim();
+  const box = $('nisSuggestions');
+  $('selectedNIS').value = ''; $('selectedNama').value = '';
+  if (!q) { box.classList.add('hidden'); return; }
+  const m = masterSiswa.filter(s => s.nis.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q)).slice(0, 30);
+  box.innerHTML = m.length ? m.map(s => `
+    <div data-nis="${esc(s.nis)}" class="sug p-2.5 hover:bg-violet-50 cursor-pointer flex justify-between items-center text-xs">
+      <div><p class="font-bold">${esc(s.nama)}</p><p class="text-[10px] text-gray-400">NIS: ${esc(s.nis)}</p></div>
+      <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">${esc(s.kelas)}</span>
+    </div>`).join('') : '<div class="p-3 text-xs text-gray-400">Siswa tidak ditemukan</div>';
+  box.classList.remove('hidden');
+}
+$('nisSuggestions').addEventListener('click', e => {
+  const el = e.target.closest('.sug'); if (!el) return;
+  const s = masterSiswa.find(x => x.nis === el.dataset.nis); if (!s) return;
+  $('selectedNIS').value = s.nis; $('selectedNama').value = s.nama;
+  $('inputNISQuery').value = `${s.nama} (${s.nis})`;
+  const b = $('siswaBadge');
+  b.innerHTML = `<div><span class="font-bold">${esc(s.nama)}</span><span class="text-gray-500 ml-2">NIS: ${esc(s.nis)}</span></div><span class="px-2 py-0.5 bg-violet-100 text-violet-700 font-semibold rounded-full text-[10px]">Kelas ${esc(s.kelas)}</span>`;
+  b.classList.remove('hidden'); b.classList.add('flex');
+  $('nisSuggestions').classList.add('hidden');
+});
+function toggleLain(v) {
+  const f = $('inputLain');
+  f.classList.toggle('hidden', v !== 'Lainnya');
+  f.required = v === 'Lainnya';
+  if (v !== 'Lainnya') f.value = '';
+}
+
+// ---------- CLOUDINARY ----------
+async function uploadCloudinary(file) {
+  if (!S.cloudName || !S.cloudPreset) throw new Error('Cloudinary belum diisi di Pengaturan');
+  const fd = new FormData(); fd.append('file', file); fd.append('upload_preset', S.cloudPreset);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${S.cloudName}/image/upload`, { method: 'POST', body: fd });
+  if (!res.ok) throw new Error('Upload Cloudinary gagal');
+  return (await res.json()).secure_url;
+}
+const thumb = (u, p = 'w_120,h_120,c_fill,q_auto,f_auto') => u && u.includes('res.cloudinary.com') ? u.replace('/upload/', `/upload/${p}/`) : u;
+const fallbackImg = n => `https://placehold.co/80x80/8b5cf6/ffffff?text=${encodeURIComponent((n || 'SW').substring(0, 2).toUpperCase())}`;
+const imgTag = (item, cls) => `<img src="${esc(thumb(item.foto) || fallbackImg(item.namaSiswa))}" onerror="this.onerror=null;this.src='${fallbackImg(item.namaSiswa)}'" class="${cls}" alt="">`;
+
+// ---------- SUBMIT ----------
+async function handleSubmit(e) {
+  e.preventDefault();
+  const nis = $('selectedNIS').value, nama = $('selectedNama').value;
+  if (!nis || !nama) return toast('Pilih siswa dari daftar saran terlebih dahulu', 'error');
+
+  let pencapaian = $('inputPencapaian').value;
+  if (pencapaian === 'Lainnya') pencapaian = $('inputLain').value.trim();
+
+  const btn = $('btnSimpan'); btn.disabled = true; btn.textContent = 'Menyimpan...';
+  try {
+    const file = $('fileInput').files[0];
+    fotoUrl = file ? await uploadCloudinary(file) : '';
+
+    const now = Date.now();
+    const item = {
+      id: String(now), nis, namaSiswa: nama, pencapaian,
+      kategori: $('inputKategori').value.trim(), namaLomba: $('inputLomba').value.trim(),
+      penyelenggara: $('inputPenyelenggara').value.trim(), tanggal: $('inputTanggal').value,
+      tempat: $('inputTempat').value.trim(), foto: fotoUrl, createdAt: String(now)
     };
-
-    function switchTab(tab) {
-      ['dashboard', 'data', 'settings'].forEach(t => {
-        const view = document.getElementById(`view-${t}`);
-        if (view) view.classList.add('hidden');
-        
-        const nav = document.getElementById(`nav-${t}`);
-        if (nav) {
-          nav.classList.remove('bg-violet-50', 'text-violet-700', 'font-semibold');
-          nav.classList.add('text-gray-600', 'font-medium');
-        }
-      });
-
-      const targetView = document.getElementById(`view-${tab}`);
-      if (targetView) targetView.classList.remove('hidden');
-
-      const targetNav = document.getElementById(`nav-${tab}`);
-      if (targetNav) {
-        targetNav.classList.add('bg-violet-50', 'text-violet-700', 'font-semibold');
-        targetNav.classList.remove('text-gray-600', 'font-medium');
-      }
-
-      const titles = {
-        dashboard: ['Dashboard Utama', 'Ringkasan performa dan pencapaian siswa'],
-        data: ['Data Prestasi Siswa', 'Tabel lengkap data prestasi terintegrasi'],
-        settings: ['Pengaturan Aplikasi', 'Konfigurasi Spreadsheet Prestasi dan Database Siswa (Primary Key: Kolom A NIS/NIPD)']
-      };
-
-      if (titles[tab]) {
-        const pTitle = document.getElementById('pageTitle');
-        const pSub = document.getElementById('pageSub');
-        if (pTitle) pTitle.innerText = titles[tab][0];
-        if (pSub) pSub.innerText = titles[tab][1];
-      }
-
-      if (tab === 'data') {
-        renderTableData(dataPrestasi);
-      } else if (tab === 'dashboard') {
-        renderDashboard();
-      }
-    }
-
-    function getOptimizedPhotoUrl(originalUrl, params = 'w_120,h_120,c_fill,g_face,q_auto,f_auto') {
-      if (!originalUrl || !originalUrl.includes('cloudinary.com')) {
-        return originalUrl;
-      }
-      return originalUrl.replace('/upload/', `/upload/${params}/`);
-    }
-
-    function simpanPengaturan() {
-      const sheetSiswaInput = document.getElementById('settingSheetSiswa');
-      if (sheetSiswaInput && sheetSiswaInput.value.trim()) {
-        sheetSiswaUrl = sheetSiswaInput.value.trim();
-      }
-      const tabRiwayatInput = document.getElementById('settingTabRiwayatKelas');
-      if (tabRiwayatInput && tabRiwayatInput.value.trim()) {
-        tabRiwayatKelas = tabRiwayatInput.value.trim();
-      }
-
-      const kolomNisUtamaInput = document.getElementById('settingKolomNisUtama');
-      if (kolomNisUtamaInput && kolomNisUtamaInput.value.trim()) {
-        kolomNisUtama = kolomNisUtamaInput.value.trim();
-      }
-      const kolomNamaUtamaInput = document.getElementById('settingKolomNamaUtama');
-      if (kolomNamaUtamaInput && kolomNamaUtamaInput.value.trim()) {
-        kolomNamaUtama = kolomNamaUtamaInput.value.trim();
-      }
-      const kolomTahunRiwayatInput = document.getElementById('settingKolomTahunRiwayat');
-      if (kolomTahunRiwayatInput && kolomTahunRiwayatInput.value.trim()) {
-        kolomTahunRiwayat = kolomTahunRiwayatInput.value.trim();
-      }
-      const kolomNisRiwayatInput = document.getElementById('settingKolomNisRiwayat');
-      if (kolomNisRiwayatInput && kolomNisRiwayatInput.value.trim()) {
-        kolomNisRiwayat = kolomNisRiwayatInput.value.trim();
-      }
-      const kolomKelasRiwayatInput = document.getElementById('settingKolomKelasRiwayat');
-      if (kolomKelasRiwayatInput && kolomKelasRiwayatInput.value.trim()) {
-        kolomKelasRiwayat = kolomKelasRiwayatInput.value.trim();
-      }
-
-      fetchMasterSiswaFromSheet();
-      showToast('Pengaturan Koneksi Spreadsheet Berhasil Disimpan!', 'success');
-    }
-
-    // ---------------------------------------------------------------
-    // Cari index kolom berdasarkan JUDUL PERSIS (exact match, case-insensitive,
-    // spasi di ujung diabaikan) -- bukan tebak-tebakan berdasarkan kata kunci.
-    // Ini menggantikan pendekatan lama yang salah menganggap "NISN" sebagai
-    // "NIS/NIPD", "Nama Ayah/Ibu" sebagai "Nama", atau nama asli siswa seperti
-    // "Purnama" sebagai baris header, karena semuanya cuma dicek pakai
-    // .includes(). Dengan exact match, kolom yang diambil selalu persis sesuai
-    // yang Anda tentukan di Pengaturan.
-    // ---------------------------------------------------------------
-    function cariIndexKolomPersis(cols, judulKolom) {
-      if (!cols || !judulKolom) return null;
-      const target = judulKolom.toLowerCase().trim();
-      const idx = cols.findIndex(col => (col.label || '').toLowerCase().trim() === target);
-      return idx === -1 ? null : idx;
-    }
-
-    // Ambil satu tab/sheet dari spreadsheet via gviz. sheetName kosong berarti
-    // ambil tab pertama (default). Dipakai bersama oleh data siswa utama dan
-    // tab "Riwayat Kelas".
-    async function fetchGvizTable(sheetId, sheetName) {
-      const sheetParam = sheetName ? `&sheet=${encodeURIComponent(sheetName)}` : '';
-      const gvizUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json${sheetParam}`;
-
-      const response = await fetch(gvizUrl);
-      if (!response.ok) throw new Error(`Gagal mengakses sheet${sheetName ? ' "' + sheetName + '"' : ''}`);
-      const text = await response.text();
-
-      const jsonStart = text.indexOf('{');
-      const jsonEnd = text.lastIndexOf('}') + 1;
-      if (jsonStart === -1 || jsonEnd === -1) throw new Error('Respon sheet tidak valid');
-
-      const data = JSON.parse(text.substring(jsonStart, jsonEnd));
-      if (!data.table) throw new Error('Tabel tidak ditemukan di respon sheet');
-      return data.table;
-    }
-
-    // Baca tab "Riwayat Kelas" (Tahun Pelajaran, NIS, Kelas) dan kembalikan
-    // Map NIS -> Kelas TERBARU (berdasarkan Tahun Pelajaran paling besar/akhir).
-    // Kalau tab ini tidak ada / gagal diakses, kembalikan Map kosong dan cuma
-    // log warning -- tidak menggagalkan load data siswa utama.
-    async function fetchRiwayatKelasMap(sheetId, tabName) {
-      const kelasMap = new Map();
-      try {
-        const table = await fetchGvizTable(sheetId, tabName);
-        if (!table.rows) return kelasMap;
-
-        const nisIdx = cariIndexKolomPersis(table.cols, kolomNisRiwayat);
-        const kelasIdx = cariIndexKolomPersis(table.cols, kolomKelasRiwayat);
-        const tahunIdx = cariIndexKolomPersis(table.cols, kolomTahunRiwayat);
-
-        if (nisIdx === null || kelasIdx === null) {
-          console.warn(`Tab "${tabName}": kolom "${kolomNisRiwayat}" dan/atau "${kolomKelasRiwayat}" tidak ditemukan persis di header, riwayat kelas dilewati.`);
-          return kelasMap;
-        }
-
-        table.rows.forEach(row => {
-          if (!row.c) return;
-          const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
-          const kelasVal = row.c[kelasIdx]?.v != null ? String(row.c[kelasIdx].v).trim() : '';
-          const tahunVal = (tahunIdx != null && row.c[tahunIdx]?.v != null) ? String(row.c[tahunIdx].v).trim() : '';
-
-          if (!nisVal || !kelasVal) return;
-
-          const existing = kelasMap.get(nisVal);
-          if (!existing) {
-            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
-          } else if (tahunVal && (!existing.tahun || tahunVal >= existing.tahun)) {
-            // Tahun Pelajaran baru diketahui dan >= yang tersimpan -> lebih baru
-            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
-          } else if (!tahunVal && !existing.tahun) {
-            // Tidak ada info tahun sama sekali di kedua baris -> asumsikan
-            // baris yang muncul belakangan di sheet adalah yang terbaru
-            kelasMap.set(nisVal, { kelas: kelasVal, tahun: tahunVal });
-          }
-        });
-      } catch (err) {
-        console.warn(`Gagal memuat tab "${tabName}" (Riwayat Kelas):`, err);
-      }
-      return kelasMap;
-    }
-
-    async function fetchMasterSiswaFromSheet() {
-      const urlInput = document.getElementById('settingSheetSiswa');
-      const url = (urlInput ? urlInput.value.trim() : '') || sheetSiswaUrl;
-      if (!url) return;
-
-      const tabRiwayatInput = document.getElementById('settingTabRiwayatKelas');
-      const tabRiwayat = (tabRiwayatInput ? tabRiwayatInput.value.trim() : '') || tabRiwayatKelas;
-
-      // Nama kolom persis yang mau diambil (bisa diisi user di Pengaturan,
-      // kalau kosong pakai default yang tersimpan).
-      const kolomNisInput = document.getElementById('settingKolomNisUtama');
-      const kolomNis = (kolomNisInput ? kolomNisInput.value.trim() : '') || kolomNisUtama;
-      const kolomNamaInput = document.getElementById('settingKolomNamaUtama');
-      const kolomNama = (kolomNamaInput ? kolomNamaInput.value.trim() : '') || kolomNamaUtama;
-
-      const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      const sheetId = match ? match[1] : url;
-
-      try {
-        const table = await fetchGvizTable(sheetId);
-        if (!table.rows) return;
-
-        // Cocokkan PERSIS sesuai judul kolom yang ditentukan di Pengaturan --
-        // tidak ada lagi tebak-tebakan berbasis kata kunci. Kalau kolomnya
-        // tidak ditemukan persis (typo, judul beda), jatuh balik ke asumsi
-        // paling umum (A=NIS/NIPD, B=Nama) supaya app tetap bisa jalan.
-        let nisIdx = cariIndexKolomPersis(table.cols, kolomNis);
-        let namaIdx = cariIndexKolomPersis(table.cols, kolomNama);
-
-        if (nisIdx === null) {
-          console.warn(`Kolom "${kolomNis}" tidak ditemukan persis di header Database Siswa, pakai kolom A sebagai fallback.`);
-          nisIdx = 0;
-        }
-        if (namaIdx === null) {
-          console.warn(`Kolom "${kolomNama}" tidak ditemukan persis di header Database Siswa, pakai kolom B sebagai fallback.`);
-          namaIdx = 1;
-        }
-
-        // Kelas siswa dicatat per Tahun Pelajaran di tab terpisah ("Riwayat
-        // Kelas"), bukan kolom tetap di Database Siswa. Ambil sekarang,
-        // paralel dengan proses parsing data siswa di atas.
-        const kelasFromRiwayat = await fetchRiwayatKelasMap(sheetId, tabRiwayat);
-
-        const loadedSiswa = [];
-        const skippedRows = []; // diagnostik: catat baris yang terlewat + alasannya
-
-        table.rows.forEach((row, rowIdx) => {
-          // Baris ke-berapa di spreadsheet (row 1 = header, jadi data dimulai dari row 2)
-          const sheetRowNumber = rowIdx + 2;
-
-          if (!row.c) {
-            skippedRows.push({ row: sheetRowNumber, alasan: 'Baris kosong total (row.c null)' });
-            return;
-          }
-
-          const nisVal = row.c[nisIdx]?.v != null ? String(row.c[nisIdx].v).trim() : '';
-          const namaVal = row.c[namaIdx]?.v != null ? String(row.c[namaIdx].v).trim() : '';
-
-          if (!nisVal) {
-            skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom NIS/NIPD kosong', nama: namaVal || '(kosong)' });
-            return;
-          }
-          if (!namaVal) {
-            skippedRows.push({ row: sheetRowNumber, alasan: 'Kolom Nama kosong', nis: nisVal });
-            return;
-          }
-
-          // Kelas: dari tab Riwayat Kelas (Tahun Pelajaran terbaru); kalau
-          // NIS ini tidak ada riwayatnya, tampilkan '-'.
-          const kelasVal = kelasFromRiwayat.get(nisVal)?.kelas || '-';
-
-          loadedSiswa.push({
-            nis: nisVal,
-            nama: namaVal,
-            kelas: kelasVal
-          });
-        });
-
-        if (skippedRows.length > 0) {
-          console.warn(`${skippedRows.length} baris terlewat saat sync data siswa. Detail per baris:`);
-          console.table(skippedRows);
-        }
-
-        if (loadedSiswa.length > 0) {
-          masterSiswa = loadedSiswa;
-          const statusElem = document.getElementById('statusSyncSiswaText');
-          const totalRowsInSheet = table.rows.length;
-          const kelasCount = loadedSiswa.filter(s => s.kelas !== '-').length;
-          if (statusElem) {
-            statusElem.innerText = skippedRows.length > 0
-              ? `Status Relasi: ${masterSiswa.length} dari ${totalRowsInSheet} baris berhasil dimuat (${skippedRows.length} baris terlewat, ${kelasCount} punya data Kelas dari "${tabRiwayat}"). Cek Console untuk detail.`
-              : `Status Relasi: ${masterSiswa.length} Data Siswa berhasil dimuat, ${kelasCount} dengan Kelas dari "${tabRiwayat}" (Primary Key: Kolom A - NIS/NIPD)!`;
-          }
-          if (skippedRows.length > 0) {
-            showToast(`Dimuat ${masterSiswa.length}/${totalRowsInSheet} siswa. ${skippedRows.length} baris terlewat — cek Console (F12).`, 'warning');
-          } else {
-            showToast(`Berhasil memuat ${masterSiswa.length} data siswa (${kelasCount} dengan Kelas)!`, 'success');
-          }
-        }
-      } catch (err) {
-        console.warn('Sync live data siswa Google Sheets:', err);
-      }
-    }
-
-    function handleNISAutocomplete(e) {
-      const q = e.target.value.toLowerCase().trim();
-      const box = document.getElementById('nisSuggestions');
-
-      if (!q) {
-        box.classList.add('hidden');
-        return;
-      }
-
-      const matches = masterSiswa.filter(s => s.nis.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q));
-
-      if (matches.length === 0) {
-        box.innerHTML = `<div class="p-3 text-xs text-gray-400">NIS/NIPD / Nama siswa tidak ditemukan</div>`;
-      } else {
-        box.innerHTML = matches.map(s => `
-          <div onclick="selectSiswa('${s.nis}', '${s.nama.replace(/'/g, "\\'")}', '${s.kelas}')" class="p-2.5 hover:bg-violet-50 cursor-pointer flex justify-between items-center text-xs">
-            <div>
-              <p class="font-bold text-gray-900">${s.nama}</p>
-              <p class="text-[10px] text-gray-400">NIS/NIPD: ${s.nis}</p>
-            </div>
-            <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-[10px]">${s.kelas}</span>
-          </div>
-        `).join('');
-      }
-
-      box.classList.remove('hidden');
-    }
-
-    function selectSiswa(nis, nama, kelas) {
-      document.getElementById('selectedNIS').value = nis;
-      document.getElementById('selectedNamaSiswa').value = nama;
-      document.getElementById('inputNISQuery').value = `${nama} (${nis})`;
-
-      document.getElementById('badgeNamaSiswa').innerText = nama;
-      document.getElementById('badgeNISSiswa').innerText = `NIS/NIPD: ${nis}`;
-      document.getElementById('badgeKelasSiswa').innerText = `Kelas ${kelas}`;
-
-      document.getElementById('selectedSiswaBadge').classList.remove('hidden');
-      document.getElementById('selectedSiswaBadge').classList.add('flex');
-      document.getElementById('nisSuggestions').classList.add('hidden');
-    }
-
-    function togglePencapaianLainnya(val) {
-      const fieldLainnya = document.getElementById('inputPencapaianLainnya');
-      if (val === 'Lainnya') {
-        fieldLainnya.classList.remove('hidden');
-        fieldLainnya.required = true;
-        fieldLainnya.focus();
-      } else {
-        fieldLainnya.classList.add('hidden');
-        fieldLainnya.required = false;
-        fieldLainnya.value = '';
-      }
-    }
-
-    async function uploadImageToCloudinary(file) {
-      const cName = document.getElementById('settingCloudinaryName')?.value.trim();
-      const cPreset = document.getElementById('settingCloudinaryPreset')?.value.trim();
-
-      if (cName && cPreset) {
-        try {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('upload_preset', cPreset);
-
-          const response = await fetch(`https://api.cloudinary.com/v1_1/${cName}/image/upload`, {
-            method: 'POST',
-            body: formData
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            return data.secure_url;
-          }
-        } catch (err) {
-          console.warn('Cloudinary upload fallback to base64 preview:', err);
-        }
-      }
-      return null;
-    }
-
-    async function handleFileSelect(event) {
-      const file = event.target.files[0];
-      if (file) {
-        document.getElementById('fileNamePreview').innerText = file.name;
-
-        const cloudUrl = await uploadImageToCloudinary(file);
-        if (cloudUrl) {
-          currentFotoBase64 = cloudUrl;
-          showToast('Foto berhasil diunggah ke Cloudinary CDN!', 'success');
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          currentFotoBase64 = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-
-    function handleFormSubmit(e) {
-      e.preventDefault();
-
-      const nis = document.getElementById('selectedNIS').value;
-      const namaSiswa = document.getElementById('selectedNamaSiswa').value;
-
-      if (!nis || !namaSiswa) {
-        showToast('Pilih NIS/NIPD atau Nama Siswa terlebih dahulu!', 'error');
-        return;
-      }
-
-      let pencapaianVal = document.getElementById('inputPencapaian').value;
-      if (pencapaianVal === 'Lainnya') {
-        pencapaianVal = document.getElementById('inputPencapaianLainnya').value.trim();
-      }
-
-      const newItem = {
-        id: Date.now().toString(),
-        nis: nis,
-        namaSiswa: namaSiswa,
-        pencapaian: pencapaianVal,
-        kategori: document.getElementById('inputKategori').value,
-        namaLomba: document.getElementById('inputNamaLomba').value,
-        penyelenggara: document.getElementById('inputPenyelenggara').value,
-        tanggal: document.getElementById('inputTanggal').value,
-        tempat: document.getElementById('inputTempat').value,
-        foto: currentFotoBase64
-      };
-
-      dataPrestasi.unshift(newItem);
-      closeModalTambah();
-      renderDashboard();
-      renderTableData(dataPrestasi);
-      showToast('Data Prestasi Siswa Berhasil Disimpan!', 'success');
-      
-      e.target.reset();
-      togglePencapaianLainnya('');
-      document.getElementById('selectedSiswaBadge').classList.add('hidden');
-    }
-
-    function renderDashboard() {
-      const totalElem = document.getElementById('metricTotal');
-      if (totalElem) totalElem.innerText = dataPrestasi.length;
-      
-      const uniqueNIS = new Set(dataPrestasi.map(d => d.nis));
-      const siswaElem = document.getElementById('metricSiswaUnik');
-      if (siswaElem) siswaElem.innerText = uniqueNIS.size;
-
-      const uniqueLomba = new Set(dataPrestasi.map(d => d.namaLomba.toLowerCase().trim()));
-      const lombaElem = document.getElementById('metricLombaUnik');
-      if (lombaElem) lombaElem.innerText = uniqueLomba.size;
-
-      const currentYearMonth = new Date().toISOString().slice(0, 7);
-      const countBulanIni = dataPrestasi.filter(d => d.tanggal && d.tanggal.startsWith(currentYearMonth)).length;
-      const bulanElem = document.getElementById('metricBulanIni');
-      if (bulanElem) bulanElem.innerText = countBulanIni || dataPrestasi.length;
-
-      const recentList = document.getElementById('recentList');
-      if (recentList) {
-        recentList.innerHTML = dataPrestasi.slice(0, 6).map(item => {
-          const photoUrl = getOptimizedPhotoUrl(item.foto);
-          return `
-            <div onclick="openModalDetail('${item.id}')" class="p-3.5 bg-gray-50/80 hover:bg-violet-50/50 rounded-xl transition-all border border-gray-100 flex items-start gap-3 cursor-pointer group">
-              <img src="${photoUrl}" 
-                   onerror="this.onerror=null; this.src='https://placehold.co/80x80/8b5cf6/ffffff?text=${encodeURIComponent((item.namaSiswa || 'SW').substring(0,2).toUpperCase())}'" 
-                   class="w-10 h-10 rounded-xl object-cover border border-violet-200/80 flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform" 
-                   alt="${item.namaSiswa}">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center justify-between gap-1">
-                  <p class="text-xs font-bold text-gray-900 truncate">${item.namaSiswa}</p>
-                  <span class="px-2 py-0.5 bg-lime-100 text-lime-800 text-[10px] font-bold rounded-full">${item.pencapaian}</span>
-                </div>
-                <p class="text-[11px] text-gray-600 font-medium truncate mt-0.5">${item.namaLomba}</p>
-                <p class="text-[10px] text-gray-400 mt-1">Kat: ${item.kategori} • NIS/NIPD: ${item.nis}</p>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-
-    function renderTableData(items) {
-      const tbody = document.getElementById('prestasiTableBody');
-      const empty = document.getElementById('tableEmptyState');
-      if (!tbody) return;
-
-      if (items.length === 0) {
-        tbody.innerHTML = '';
-        if (empty) empty.classList.remove('hidden');
-        return;
-      }
-
-      if (empty) empty.classList.add('hidden');
-      tbody.innerHTML = items.map(item => {
-        const photoUrl = getOptimizedPhotoUrl(item.foto);
-        return `
-          <tr class="hover:bg-gray-50/80 transition-colors">
-            <td class="py-3 px-4">
-              <img src="${photoUrl}" 
-                   onerror="this.onerror=null; this.src='https://placehold.co/80x80/8b5cf6/ffffff?text=${encodeURIComponent((item.namaSiswa || 'SW').substring(0,2).toUpperCase())}'" 
-                   class="w-10 h-10 object-cover rounded-lg border border-gray-200" alt="Bukti">
-            </td>
-            <td class="py-3 px-4">
-              <p class="font-bold text-gray-900">${item.namaSiswa}</p>
-              <p class="text-[10px] text-violet-700 font-mono font-medium">NIS/NIPD: ${item.nis}</p>
-            </td>
-            <td class="py-3 px-4">
-              <span class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-[11px] rounded-full border border-lime-200">${item.pencapaian}</span>
-            </td>
-            <td class="py-3 px-4">
-              <p class="font-medium text-gray-800">${item.namaLomba}</p>
-              <p class="text-[10px] text-gray-500 font-medium">${item.kategori}</p>
-            </td>
-            <td class="py-3 px-4 text-gray-600">${item.penyelenggara}</td>
-            <td class="py-3 px-4 text-gray-500">
-              <p>${item.tanggal}</p>
-              <p class="text-[10px] text-gray-400">${item.tempat}</p>
-            </td>
-            <td class="py-3 px-4 text-center">
-              <div class="flex items-center justify-center gap-1">
-                <button onclick="openModalDetail('${item.id}')" class="p-1.5 text-gray-400 hover:text-violet-600 rounded-lg hover:bg-violet-50"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                <button onclick="deletePrestasi('${item.id}')" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-    }
-
-    function applyFilters() {
-      const searchElem = document.getElementById('filterSearch');
-      if (!searchElem) return;
-      const query = searchElem.value.toLowerCase();
-
-      const filtered = dataPrestasi.filter(d => {
-        return (d.namaSiswa || '').toLowerCase().includes(query) || 
-               (d.nis || '').toLowerCase().includes(query) || 
-               (d.namaLomba || '').toLowerCase().includes(query) ||
-               (d.kategori || '').toLowerCase().includes(query) ||
-               (d.pencapaian || '').toLowerCase().includes(query);
-      });
-
-      renderTableData(filtered);
-    }
-
-    function handleGlobalSearch(e) {
-      if (e.key === 'Enter') {
-        const q = e.target.value;
-        switchTab('data');
-        const filterInput = document.getElementById('filterSearch');
-        if (filterInput) filterInput.value = q;
-        applyFilters();
-      }
-    }
-
-    function openModalTambah() {
-      const modal = document.getElementById('modalTambah');
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeModalTambah() {
-      const modal = document.getElementById('modalTambah');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function openModalDetail(id) {
-      const item = dataPrestasi.find(d => d.id === id);
-      if (!item) return;
-
-      document.getElementById('detailNamaLomba').innerText = item.namaLomba;
-      document.getElementById('detailBadge').innerText = item.pencapaian;
-      document.getElementById('detailNamaSiswa').innerText = item.namaSiswa;
-      document.getElementById('detailNIS').innerText = `NIS/NIPD: ${item.nis}`;
-      document.getElementById('detailKategori').innerText = item.kategori;
-      document.getElementById('detailPenyelenggara').innerText = item.penyelenggara;
-      document.getElementById('detailTanggal').innerText = item.tanggal;
-      document.getElementById('detailTempat').innerText = item.tempat;
-      document.getElementById('detailFoto').src = item.foto;
-
-      const modalDetail = document.getElementById('modalDetail');
-      if (modalDetail) modalDetail.classList.remove('hidden');
-    }
-
-    function closeModalDetail() {
-      const modalDetail = document.getElementById('modalDetail');
-      if (modalDetail) modalDetail.classList.add('hidden');
-    }
-
-    function deletePrestasi(id) {
-      if (confirm('Apakah Anda yakin ingin menghapus data prestasi ini?')) {
-        dataPrestasi = dataPrestasi.filter(d => d.id !== id);
-        renderDashboard();
-        renderTableData(dataPrestasi);
-        showToast('Data berhasil dihapus', 'success');
-      }
-    }
-
-    function showToast(message, type = 'success') {
-      const toastHolder = document.getElementById('toastHolder');
-      if (!toastHolder) return;
-      const toast = document.createElement('div');
-      
-      toast.className = `p-4 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-3 bg-gray-900 text-white border border-gray-800 transition-all`;
-      toast.innerHTML = `
-        <div class="w-6 h-6 rounded-full bg-lime-500/20 text-lime-400 flex items-center justify-center">
-          <i data-lucide="check-circle" class="w-4 h-4"></i>
-        </div>
-        <span>${message}</span>
-      `;
-
-      toastHolder.appendChild(toast);
-      if (window.lucide) {
-        lucide.createIcons();
-      }
-
-      setTimeout(() => {
-        toast.remove();
-      }, 3000);
-    }
-  </script>
+    await apiPost({ action: 'add', item });   // tulis ke sheet DULU
+
+    dataPrestasi.unshift(item);
+    renderAll(); closeModalTambah();
+    $('formPrestasi').reset(); toggleLain('');
+    $('siswaBadge').classList.add('hidden'); $('siswaBadge').classList.remove('flex');
+    $('selectedNIS').value = ''; $('selectedNama').value = '';
+    toast('Prestasi tersimpan ke spreadsheet', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Gagal menyimpan: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Simpan ke Spreadsheet';
+  }
+}
+
+async function deletePrestasi(id) {
+  if (!confirm('Hapus data prestasi ini dari spreadsheet?')) return;
+  try {
+    await apiPost({ action: 'delete', id });
+    dataPrestasi = dataPrestasi.filter(d => d.id !== id);
+    renderAll(); toast('Data dihapus', 'success');
+  } catch (err) { toast('Gagal menghapus: ' + err.message, 'error'); }
+}
+
+// ---------- RENDER ----------
+function renderAll() { renderDashboard(); renderTable(); }
+
+function renderDashboard() {
+  $('mTotal').textContent = dataPrestasi.length;
+  $('mSiswa').textContent = new Set(dataPrestasi.map(d => d.nis)).size;
+  $('mLomba').textContent = new Set(dataPrestasi.map(d => (d.namaLomba || '').toLowerCase().trim())).size;
+  const ym = new Date().toISOString().slice(0, 7);
+  $('mBulan').textContent = dataPrestasi.filter(d => (d.tanggal || '').startsWith(ym)).length;
+  $('recentList').innerHTML = dataPrestasi.length ? dataPrestasi.slice(0, 6).map(it => `
+    <div onclick="openDetail('${esc(it.id)}')" class="p-3.5 bg-gray-50 hover:bg-violet-50/50 rounded-xl border border-gray-100 flex items-start gap-3 cursor-pointer">
+      ${imgTag(it, 'w-10 h-10 rounded-xl object-cover border border-violet-200 flex-shrink-0')}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-1"><p class="text-xs font-bold truncate">${esc(it.namaSiswa)}</p><span class="px-2 py-0.5 bg-lime-100 text-lime-800 text-[10px] font-bold rounded-full whitespace-nowrap">${esc(it.pencapaian)}</span></div>
+        <p class="text-[11px] text-gray-600 font-medium truncate mt-0.5">${esc(it.namaLomba)}</p>
+        <p class="text-[10px] text-gray-400 mt-1 truncate">${esc(it.kategori)} • ${esc(it.nis)}</p>
+      </div>
+    </div>`).join('') : '<p class="text-xs text-gray-400 col-span-full">Belum ada data prestasi.</p>';
+}
+
+function renderTable() {
+  const q = ($('filterSearch').value || '').toLowerCase();
+  const items = dataPrestasi.filter(d => [d.namaSiswa, d.nis, d.namaLomba, d.kategori, d.pencapaian].some(v => (v || '').toLowerCase().includes(q)));
+  $('emptyState').classList.toggle('hidden', items.length > 0);
+  $('tbody').innerHTML = items.map(it => `
+    <tr class="hover:bg-gray-50">
+      <td class="py-3 px-4">${imgTag(it, 'w-10 h-10 object-cover rounded-lg border border-gray-200')}</td>
+      <td class="py-3 px-4"><p class="font-bold">${esc(it.namaSiswa)}</p><p class="text-[10px] text-violet-700 font-mono">${esc(it.nis)}</p></td>
+      <td class="py-3 px-4"><span class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-[11px] rounded-full">${esc(it.pencapaian)}</span></td>
+      <td class="py-3 px-4"><p class="font-medium">${esc(it.namaLomba)}</p><p class="text-[10px] text-gray-500">${esc(it.kategori)}</p></td>
+      <td class="py-3 px-4 text-gray-600">${esc(it.penyelenggara)}</td>
+      <td class="py-3 px-4 text-gray-500"><p>${esc(it.tanggal)}</p><p class="text-[10px] text-gray-400">${esc(it.tempat)}</p></td>
+      <td class="py-3 px-4 text-center whitespace-nowrap">
+        <button onclick="openDetail('${esc(it.id)}')" class="p-1.5 text-gray-400 hover:text-violet-600"><i data-lucide="eye" class="w-4 h-4"></i></button>
+        <button onclick="deletePrestasi('${esc(it.id)}')" class="p-1.5 text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+      </td>
+    </tr>`).join('');
+  if (window.lucide) lucide.createIcons();
+}
+
+function openDetail(id) {
+  const it = dataPrestasi.find(d => d.id === id); if (!it) return;
+  $('detailBody').innerHTML = `
+    <div class="flex justify-between items-start border-b border-gray-100 pb-3">
+      <div><span class="px-2.5 py-1 bg-lime-100 text-lime-800 font-bold text-xs rounded-full inline-block mb-1">${esc(it.pencapaian)}</span><h3 class="font-bold text-base leading-tight">${esc(it.namaLomba)}</h3></div>
+      <button onclick="$('modalDetail').classList.add('hidden')" class="text-gray-400 p-1 text-lg leading-none">&times;</button>
+    </div>
+    <div class="p-3 bg-gray-50 rounded-xl text-xs"><p class="font-bold text-sm">${esc(it.namaSiswa)}</p><p class="text-gray-500">NIS: ${esc(it.nis)}</p></div>
+    <div class="grid grid-cols-2 gap-3 text-xs">
+      <div><span class="text-gray-400 block text-[10px]">KATEGORI</span><b>${esc(it.kategori)}</b></div>
+      <div><span class="text-gray-400 block text-[10px]">PENYELENGGARA</span><b>${esc(it.penyelenggara)}</b></div>
+      <div><span class="text-gray-400 block text-[10px]">TANGGAL</span><b>${esc(it.tanggal)}</b></div>
+      <div><span class="text-gray-400 block text-[10px]">TEMPAT</span><b>${esc(it.tempat)}</b></div>
+    </div>
+    ${it.foto ? `<img src="${esc(thumb(it.foto, 'w_800,q_auto,f_auto'))}" class="w-full max-h-72 object-contain rounded-xl border border-gray-200 bg-gray-50" alt="Bukti">` : ''}`;
+  $('modalDetail').classList.remove('hidden');
+}
+
+// ---------- UI ----------
+const TITLES = {
+  dashboard: ['Dashboard', 'Ringkasan pencapaian siswa'],
+  data: ['Data Prestasi Siswa', 'Tabel lengkap dari Google Sheets'],
+  settings: ['Pengaturan', 'Koneksi Apps Script, Database Siswa, dan Cloudinary']
+};
+function switchTab(tab) {
+  ['dashboard', 'data', 'settings'].forEach(t => $('view-' + t).classList.toggle('hidden', t !== tab));
+  document.querySelectorAll('.navbtn').forEach(b => b.classList.toggle('active', b.dataset.nav === tab));
+  $('pageTitle').textContent = TITLES[tab][0]; $('pageSub').textContent = TITLES[tab][1];
+}
+function openModalTambah() { $('modalTambah').classList.remove('hidden'); }
+function closeModalTambah() { $('modalTambah').classList.add('hidden'); }
+
+function toast(msg, type = 'success') {
+  const c = { success: 'bg-lime-500/20 text-lime-400', error: 'bg-red-500/20 text-red-400', warning: 'bg-amber-500/20 text-amber-400' }[type] || '';
+  const sym = { success: '✓', error: '!', warning: '!' }[type] || '✓';
+  const t = document.createElement('div');
+  t.className = 'p-4 rounded-xl shadow-xl text-xs font-semibold flex items-center gap-3 bg-gray-900 text-white max-w-xs';
+  t.innerHTML = `<span class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${c}">${sym}</span><span>${esc(msg)}</span>`;
+  $('toastHolder').appendChild(t);
+  setTimeout(() => t.remove(), type === 'error' ? 5000 : 3000);
+}
+
+window.onload = () => {
+  fillSettingsForm();
+  switchTab('dashboard');
+  if (window.lucide) lucide.createIcons();
+  fetchSiswa();
+  loadPrestasi();
+  if (!S.scriptUrl) toast('Isi URL Apps Script di Pengaturan agar data bisa tersimpan', 'warning');
+};
+</script>
 </body>
 </html>
