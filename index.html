@@ -17,7 +17,7 @@
   <div class="flex flex-col flex-grow pt-5 overflow-y-auto">
     <div class="flex items-center gap-3 px-6 pb-6 border-b border-gray-100">
       <div class="w-10 h-10 bg-violet-600 flex-shrink-0" style="-webkit-mask:url('https://i.imgur.com/5T1LlRI.png') no-repeat center/contain;mask:url('https://i.imgur.com/5T1LlRI.png') no-repeat center/contain"></div>
-      <div><h1 class="font-bold text-base leading-tight">PresTunas</h1><p class="text-xs text-gray-500 font-medium">Data Prestasi Siswa</p></div>
+      <div><h1 class="font-bold text-base leading-tight">Data Prestasi Siswa</h1><p class="text-xs text-gray-500 font-medium">SDNP Tunas Global</p></div>
     </div>
     <div id="syncBox" class="mx-4 my-4 p-3 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2.5">
       <span id="syncDot" class="h-2.5 w-2.5 rounded-full bg-gray-400"></span>
@@ -105,12 +105,11 @@
     <!-- SETTINGS -->
     <div id="view-settings" class="hidden max-w-2xl">
       <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
-        <div><h3 class="text-base font-bold">Pengaturan Koneksi</h3><p class="text-xs text-gray-500">Disimpan di browser ini (localStorage).</p></div>
+        <div><h3 class="text-base font-bold">Pengaturan Koneksi</h3><p class="text-xs text-gray-500">Nilai bawaan ada di kode (DEFAULTS). Perubahan di sini hanya disimpan di browser ini (localStorage).</p></div>
 
         <div class="space-y-3 p-4 bg-violet-50/60 border border-violet-100 rounded-xl">
           <p class="text-xs font-bold text-violet-900">Penyimpanan Prestasi (Apps Script)</p>
           <div><label class="block text-[11px] font-semibold mb-1">URL Web App (/exec)</label><input id="sScriptUrl" class="fld" placeholder="https://script.google.com/macros/s/.../exec"></div>
-          <div><label class="block text-[11px] font-semibold mb-1">Token (sama dengan TOKEN di Code.gs)</label><input id="sToken" class="fld" type="password"></div>
           <div><label class="block text-[11px] font-semibold mb-1">URL Spreadsheet Data Prestasi (untuk tombol "Buka Sheet")</label><input id="sSheetPrestasi" class="fld"></div>
         </div>
 
@@ -225,19 +224,25 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 // ---------- SETTINGS ----------
+// Isi nilai di bawah ini SEKALI di kode, supaya semua device langsung terhubung
+// tanpa perlu mengisi Pengaturan satu per satu.
 const DEFAULTS = {
-  scriptUrl: 'ISI_URL_WEB_APP_ANDA_DI_SINI',   // <-- ganti dengan URL .../exec dari Deploy Anda
-  token: 'ISI_TOKEN_RAHASIA_ANDA_DI_SINI',      // <-- ganti dengan TOKEN yang sama persis dengan di Code.gs
+  scriptUrl: 'https://script.google.com/macros/s/AKfycbwjHjqCNOJ9a-GGBAEEhsVmQJ4DgEM5Vo9h-B7C5Yjb27vtXP0BjEfptajp40TuiOr0nA/exec',        // <-- tempel URL Web App Apps Script (berakhiran /exec)
   sheetPrestasi: 'https://docs.google.com/spreadsheets/d/1XBOIT08bXEK8Qo96isQjYFzQZnyG-ZIDjoE2Xv0y3n8/edit',
   sheetSiswa: 'https://docs.google.com/spreadsheets/d/1HIld6F9AM9LMKdZnWClrH3d8avQ3_4BXoTYZn-22Oqc/edit',
   tabRiwayat: 'Riwayat_Kelas',
   kolNisU: 'NIS/NIPD', kolNamaU: 'Nama Lengkap',
   kolTahunR: 'Tahun Pelajaran', kolNisR: 'NIS', kolKelasR: 'Kelas',
-  cloudName: 'ISI_CLOUDINARY_CLOUD_NAME_ANDA', cloudPreset: 'ISI_CLOUDINARY_UPLOAD_PRESET_ANDA'
+  cloudName: 'wfxtt49a',        // <-- isi Cloudinary Cloud Name
+  cloudPreset: 'prestasi_upload'       // <-- isi Cloudinary Upload Preset (unsigned)
 };
-const FIELD_IDS = { scriptUrl:'sScriptUrl', token:'sToken', sheetPrestasi:'sSheetPrestasi', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
+const FIELD_IDS = { scriptUrl:'sScriptUrl', sheetPrestasi:'sSheetPrestasi', sheetSiswa:'sSheetSiswa', tabRiwayat:'sTabRiwayat', kolNisU:'sKolNisU', kolNamaU:'sKolNamaU', kolTahunR:'sKolTahunR', kolNisR:'sKolNisR', kolKelasR:'sKolKelasR', cloudName:'sCloudName', cloudPreset:'sCloudPreset' };
 let S = { ...DEFAULTS };
-try { S = { ...DEFAULTS, ...JSON.parse(localStorage.getItem('prestunas_settings') || '{}') }; } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem('prestunas_settings') || '{}');
+  // hanya nilai yang TIDAK kosong yang menimpa default
+  Object.keys(DEFAULTS).forEach(k => { if (saved[k]) S[k] = saved[k]; });
+} catch (e) {}
 if (S.tabRiwayat === 'Riwayat Kelas') S.tabRiwayat = 'Riwayat_Kelas';
 
 function fillSettingsForm() { Object.entries(FIELD_IDS).forEach(([k, id]) => $(id).value = S[k] || ''); }
@@ -264,7 +269,7 @@ function setSync(state, sub) {
 async function apiPost(payload) {
   if (!S.scriptUrl) throw new Error('URL Apps Script belum diisi di Pengaturan');
   // text/plain menghindari preflight CORS (tidak didukung Apps Script)
-  const res = await fetch(S.scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...payload, token: S.token }) });
+  const res = await fetch(S.scriptUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || 'Gagal');
   return json;
@@ -273,7 +278,7 @@ async function loadPrestasi(manual) {
   if (!S.scriptUrl) { setSync('off', 'Isi URL Apps Script'); renderAll(); return; }
   setSync('load');
   try {
-    const res = await fetch(`${S.scriptUrl}?action=list&token=${encodeURIComponent(S.token)}`);
+    const res = await fetch(`${S.scriptUrl}?action=list`);
     const json = await res.json();
     if (!json.ok) throw new Error(json.error);
     dataPrestasi = json.data.sort((a, b) => Number(b.createdAt || b.id) - Number(a.createdAt || a.id));
@@ -281,7 +286,7 @@ async function loadPrestasi(manual) {
     if (manual) toast('Data dimuat ulang dari sheet', 'success');
   } catch (err) {
     console.error(err);
-    setSync('err', 'Cek URL / token');
+    setSync('err', 'Cek URL Apps Script');
     toast('Gagal memuat prestasi: ' + err.message, 'error');
   }
   renderAll();
@@ -625,7 +630,7 @@ window.onload = () => {
   if (window.lucide) lucide.createIcons();
   fetchSiswa();
   loadPrestasi();
-  if (!S.scriptUrl) toast('Isi URL Apps Script di Pengaturan agar data bisa tersimpan', 'warning');
+  if (!S.scriptUrl) toast('Isi URL Apps Script di DEFAULTS (kode) atau di Pengaturan agar data bisa tersimpan', 'warning');
 };
 </script>
 </body>
